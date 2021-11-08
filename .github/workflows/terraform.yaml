@@ -20,7 +20,7 @@ env:
   tfnotify_version: 0.7.0
 
 jobs:
-  terraform-plan:
+  terraform-automation:
     runs-on: ubuntu-20.04
     defaults:
       run:
