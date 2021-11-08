@@ -1,0 +1,52 @@
+name: AWS example workflow
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - terraform/manual/**
+
+permissions:
+  id-token: write
+  contents: write    # This is required for actions/checkout@v1
+env:
+  terraform_version: 1.0.10
+  tfnotify_version: 0.7.0
+
+jobs:
+  terraform-plan:
+    runs-on: ubuntu-20.04
+    defaults:
+      run:
+        working-directory: ./terraform/manual/
+    steps:
+      - name: git clone the repository
+        uses: actions/checkout@v1
+      - name: configure aws credentials
+        uses: aws-actions/configure-aws-credentials@master
+        with:
+          role-to-assume: ${{ secrets.AWS_IAM_ROLE_ARN }}
+          role-session-name: github-actions
+          aws-region: ap-northeast-1
+      - name: setup tfnotify
+        run: |
+          sudo curl -fL -o tfnotify.tar.gz https://github.com/mercari/tfnotify/releases/download/v${{ env.tfnotify_eversion }}/tfnotify_linux_amd64.tar.gz
+          sudo tar -C /usr/bin -xzf ./tfnotify.tar.gz
+      - name: setup terraform
+        uses: hashicorp/setup-terraform@v1
+        with:
+          terraform_version: ${{ env.terraform_version }}
+      - name: terraform init
+        id: init
+        run: terraform init
+      - name: terraform validate
+        id: validate
+        run: terraform validate -no-color
+      - name: Terraform plan
+        id: plan
+        run: terraform plan -no-color
+        continue-on-error: true
+      - name: notify terraform plan result
+        run: terraform plan -no-color | tfnotify --config ../tfnotify.yml plan
+        env:
+          GITHUB_TOKEN: ${{ secrets.github_token }}
