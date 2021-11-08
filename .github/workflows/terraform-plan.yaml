@@ -30,12 +30,14 @@ jobs:
           aws-region: ap-northeast-1
       - name: setup tfnotify
         run: |
-          sudo curl -fL -o tfnotify.tar.gz https://github.com/mercari/tfnotify/releases/download/v${{ env.tfnotify_eversion }}/tfnotify_linux_amd64.tar.gz
+          sudo curl -fL -o tfnotify.tar.gz https://github.com/mercari/tfnotify/releases/download/v${{ env.tfnotify_version }}/tfnotify_linux_amd64.tar.gz
           sudo tar -C /usr/bin -xzf ./tfnotify.tar.gz
       - name: setup terraform
         uses: hashicorp/setup-terraform@v1
         with:
           terraform_version: ${{ env.terraform_version }}
+      - name: setup terraformrc
+        run: echo '${{ secrets.TERRAFORMRC }}' > $HOME/.terraformrc
       - name: terraform init
         id: init
         run: terraform init
