@@ -49,6 +49,12 @@ jobs:
         run: terraform plan -no-color
         continue-on-error: true
       - name: notify terraform plan result
-        run: terraform plan -no-color | tfnotify --config ../tfnotify.yaml plan
+        # https://sue445.hatenablog.com/entry/2021/01/07/004835
+        run: |
+          if [ -n "$PR_HEAD_SHA" ]; then
+            export GITHUB_SHA=$PR_HEAD_SHA
+          fi
+          terraform plan -no-color | tfnotify --config ../tfnotify.yaml plan
         env:
           GITHUB_TOKEN: ${{ secrets.github_token }}
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
