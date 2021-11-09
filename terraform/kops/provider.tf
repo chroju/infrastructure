@@ -26,3 +26,14 @@ provider "aws" {
     }
   }
 }
+
+provider "aws" {
+  region = "ap-northeast-1"
+  alias  = "files"
+  default_tags {
+    tags = {
+      GitHubOrg          = "infrastructure"
+      TerraformWorkspace = "chroju-infrastructure-manual"
+    }
+  }
+}
