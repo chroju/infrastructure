@@ -1,16 +1,16 @@
 name: Terraform workflow
 on:
   workflow_dispatch:
-  pull_request:
-    branches:
-      - main
-    paths:
-      - terraform/kops/**
-  push:
-    branches:
-      - main
-    paths:
-      - terraform/kops/**
+  # pull_request:
+  #   branches:
+  #     - main
+  #   paths:
+  #     - terraform/kops/**
+  # push:
+  #   branches:
+  #     - main
+  #   paths:
+  #     - terraform/kops/**
 
 permissions:
   id-token: write
