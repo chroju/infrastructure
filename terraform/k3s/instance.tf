@@ -45,6 +45,17 @@ resource "aws_spot_instance_request" "k3s" {
 
   disable_api_termination = true
 
+  user_data = templatefile("${path.module}/k3s_user_data_template.sh",
+    {
+      k3s_version                = local.k3s_version,
+      cloudflared_version        = local.cloudflared_version,
+      cloudflare_account_id      = var.cloudflare_account_id,
+      cloudflare_tunnel_id       = cloudflare_argo_tunnel.k3s_zero_trust_tunnel.id,
+      cloudflare_tunnel_secret   = random_password.tunnel_secret.result,
+      cloudflare_tunnel_hostname = var.cloudflare_tunnel_hostname,
+    }
+  )
+
   root_block_device {
     volume_size = 50
     volume_type = "gp2"
@@ -52,14 +63,14 @@ resource "aws_spot_instance_request" "k3s" {
     # kms_key_id  = aws_kms_alias.k3s.id
   }
 
-  # user_data = <<-EOF
-  # #!/bin/bash
-  # curl -sfL https://get.k3s.io | K3S_KUBECONFIG_MODE="644" sh -
-  # EOF
-
   # spot instance
   spot_price = data.aws_ec2_spot_price.for_k3s.spot_price * 1.1 # max price
 
   instance_type                        = local.k3s_instance_type
   instance_initiated_shutdown_behavior = "stop"
+  wait_for_fulfillment                 = true
+
+  tags = {
+    "Name" = "k3s-zero-trust"
+  }
 }

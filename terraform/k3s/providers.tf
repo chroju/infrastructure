@@ -5,6 +5,10 @@ terraform {
       source  = "hashicorp/aws"
       version = "4.25.0"
     }
+    cloudflare = {
+      source  = "cloudflare/cloudflare"
+      version = "3.21.0"
+    }
   }
 
   backend "remote" {
@@ -22,4 +26,8 @@ provider "aws" {
       Workspace = "k3s"
     }
   }
+}
+
+provider "cloudflare" {
+  api_token = var.cloudflare_api_token # TODO
 }
