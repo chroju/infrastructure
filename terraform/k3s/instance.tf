@@ -37,7 +37,7 @@ data "aws_security_group" "external_only" {
 
 resource "aws_spot_instance_request" "k3s" {
   ami                         = data.aws_ami.ubuntu_22_04_latest.id
-  associate_public_ip_address = false
+  associate_public_ip_address = true
   subnet_id                   = data.aws_subnet.public.id
   iam_instance_profile        = "AmazonEC2RoleforSSM" # TODO
   key_name                    = "chiang"              # TODO
@@ -51,6 +51,11 @@ resource "aws_spot_instance_request" "k3s" {
     # encrypted   = true
     # kms_key_id  = aws_kms_alias.k3s.id
   }
+
+  # user_data = <<-EOF
+  # #!/bin/bash
+  # curl -sfL https://get.k3s.io | K3S_KUBECONFIG_MODE="644" sh -
+  # EOF
 
   # spot instance
   spot_price = data.aws_ec2_spot_price.for_k3s.spot_price * 1.1 # max price
