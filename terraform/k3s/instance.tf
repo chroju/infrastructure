@@ -47,12 +47,21 @@ resource "aws_spot_instance_request" "k3s" {
 
   user_data = templatefile("${path.module}/k3s_user_data_template.sh",
     {
-      k3s_version                = local.k3s_version,
-      cloudflared_version        = local.cloudflared_version,
-      cloudflare_account_id      = var.cloudflare_account_id,
-      cloudflare_tunnel_id       = cloudflare_argo_tunnel.k3s_zero_trust_tunnel.id,
-      cloudflare_tunnel_secret   = random_password.tunnel_secret.result,
-      cloudflare_tunnel_hostname = var.cloudflare_tunnel_hostname,
+      k3s_version           = local.k3s_version,
+      cloudflared_version   = local.cloudflared_version,
+      cloudflare_account_id = var.cloudflare_account_id,
+      cloudflare_tunnel = {
+        kubectl = {
+          id       = cloudflare_argo_tunnel.k3s_zero_trust_tunnel.id,
+          secret   = random_password.tunnel_secret.result,
+          hostname = var.cloudflare_tunnel_kubectl_hostname,
+        }
+        argo_cd = {
+          id       = cloudflare_argo_tunnel.argo_cd_zero_trust_tunnel.id,
+          secret   = random_password.argo_cd_tunnel_secret.result,
+          hostname = var.cloudflare_tunnel_argo_cd_hostname,
+        }
+      }
     }
   )
 
