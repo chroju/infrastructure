@@ -1,0 +1,24 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: apps
+  namespace: argo-cd
+spec:
+  generators:
+  - list:
+      elements:
+      - appname: namespace
+        path: kubernetes/namespace
+        namespace: kube-system # temp
+  template:
+    metadata:
+      name: '{{appname}}'
+    spec:
+      project: default
+      source:
+        repoURL: https://github.com/chroju/infrastructure
+        targetRevision: HEAD
+        path: '{{path}}'
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: '{{namespace}}'
