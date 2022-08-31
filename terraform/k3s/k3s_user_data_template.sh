@@ -91,7 +91,7 @@ spec:
   valuesContent: |-
     server:
       extraArgs:
-        - --insecure
+        - --insecure # HTTPSを無効化しないとArgo Tunnelから繋がらない
 EOF
 
 cat > /tmp/cloudflare-tunnel.json <<EOF
@@ -180,6 +180,7 @@ kubectl apply -f /tmp/cloudflare-deployment.yaml
 curl https://raw.githubusercontent.com/chroju/infrastructure/main/kubernetes/application-set/application-set.yaml -o /tmp/application-set.yaml
 while true
 do
+    # Argo CD ApplicationSet Controllerの起動を待つ
     kubectl get deployment/argo-cd-argocd-applicationset-controller -n argo-cd | grep 1/1
     if [[ "$?" == '0' ]]; then
         break
