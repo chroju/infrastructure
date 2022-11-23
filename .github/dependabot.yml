@@ -9,11 +9,11 @@ updates:
     directory: ./terraform/bitwarden # Location of package manifests
     schedule:
       interval: weekly
-      time: 18:00
+      time: "18:00"
       timezone: Asia/Tokyo
   - package-ecosystem: terraform # See documentation for possible values
     directory: ./terraform/k3s # Location of package manifests
     schedule:
       interval: weekly
-      time: 18:00
+      time: "18:00"
       timezone: Asia/Tokyo
