@@ -101,7 +101,7 @@ resource "aws_spot_instance_request" "bitwarden" {
   }
 
   # spot instance
-  spot_price = values(values(jsondecode(data.aws_pricing_product.ec2_instance.result).terms.OnDemand)[0].priceDimensions)[0].pricePerUnit.USD
+  spot_price = values(values(jsondecode(data.aws_pricing_product.ec2_instance.result).terms.OnDemand)[0].priceDimensions)[0].pricePerUnit.USD * 0.9
 
   instance_type                        = local.bitwarden_instance_type
   instance_initiated_shutdown_behavior = "stop"
