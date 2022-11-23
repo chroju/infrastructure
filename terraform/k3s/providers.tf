@@ -28,6 +28,11 @@ provider "aws" {
   }
 }
 
+provider "aws" {
+  alias  = "ap-south-1"
+  region = "ap-south-1"
+}
+
 provider "cloudflare" {
   api_token = var.cloudflare_api_token # TODO
 }

@@ -35,6 +35,39 @@ data "aws_security_group" "external_only" {
   name = "external_only"
 }
 
+data "aws_pricing_product" "ec2_instance" {
+  provider     = aws.ap-south-1
+  service_code = "AmazonEC2"
+  filters {
+    field = "instanceType"
+    value = local.bitwarden_instance_type
+  }
+  filters {
+    field = "operatingSystem"
+    value = "Linux"
+  }
+  filters {
+    field = "preInstalledSw"
+    value = "NA"
+  }
+  filters {
+    field = "location"
+    value = "Asia Pacific (Tokyo)"
+  }
+  filters {
+    field = "licenseModel"
+    value = "No License required"
+  }
+  filters {
+    field = "tenancy"
+    value = "Shared"
+  }
+  filters {
+    field = "capacitystatus"
+    value = "Used"
+  }
+}
+
 resource "aws_spot_instance_request" "bitwarden" {
   ami                         = data.aws_ami.ubuntu_22_04_latest.id
   associate_public_ip_address = true
@@ -68,7 +101,7 @@ resource "aws_spot_instance_request" "bitwarden" {
   }
 
   # spot instance
-  spot_price = data.aws_ec2_spot_price.for_bitwarden.spot_price * 1.1 # max price
+  spot_price = values(values(jsondecode(data.aws_pricing_product.ec2_instance.result).terms.OnDemand)[0].priceDimensions)[0].pricePerUnit.USD
 
   instance_type                        = local.bitwarden_instance_type
   instance_initiated_shutdown_behavior = "stop"
