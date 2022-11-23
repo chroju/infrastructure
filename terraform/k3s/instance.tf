@@ -116,3 +116,20 @@ resource "aws_spot_instance_request" "k3s" {
     "Name" = "k3s-zero-trust"
   }
 }
+
+resource "aws_ebs_volume" "k3s_data" {
+  availability_zone = "ap-northeast-1d"
+  size              = 10
+  encrypted         = true
+  kms_key_id        = aws_kms_key.k3s.arn
+
+  tags = {
+    Name = "k3s_data"
+  }
+}
+
+resource "aws_volume_attachment" "ebs" {
+  device_name = "/dev/sdf"
+  volume_id   = aws_ebs_volume.k3s_data.id
+  instance_id = aws_spot_instance_request.k3s.spot_instance_id
+}
