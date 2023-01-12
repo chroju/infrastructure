@@ -16,4 +16,4 @@ jobs:
           images: name/app
           tags: |
             type=schedule,pattern={{date 'YYYYMMDD-hhmmss' tz='Asia/Tokyo'}}
-            type=raw,value={{date 'YYYYMMDD-hhmmss' tz='Asia/Tokyo'}}-dev
+            # type=raw,value={{date 'YYYYMMDD-hhmmss' tz='Asia/Tokyo'}}-dev
