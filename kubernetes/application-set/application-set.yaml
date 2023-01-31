@@ -10,6 +10,9 @@ spec:
       - appname: namespace
         path: kubernetes/namespace
         namespace: kube-system # temp
+      - appname: kube-prometheus-stack
+        path: kubernetes/kube-prometheus-stack
+        namespace: kube-system # temp
   template:
     metadata:
       name: '{{appname}}'
