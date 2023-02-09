@@ -88,6 +88,7 @@ spec:
   repo: https://argoproj.github.io/argo-helm
   chart: argo-cd
   targetNamespace: argo-cd
+  # あああ
   valuesContent: |-
     server:
       extraArgs:
@@ -177,7 +178,7 @@ kubectl apply -f /tmp/cloudflare-deployment.yaml
 
 # Apply ApplicationSet
 
-curl https://raw.githubusercontent.com/chroju/infrastructure/main/kubernetes/application-set/application-set.yaml -o /tmp/application-set.yaml
+curl https://raw.githubusercontent.com/chroju/infrastructure/main/kubernetes/bootstrap/app-of-application-set.yaml -o /tmp/application-set.yaml
 while true
 do
     # Argo CD ApplicationSet Controllerの起動を待つ
