@@ -5,23 +5,28 @@ metadata:
   namespace: argo-cd
 spec:
   generators:
-  - list:
-      elements:
-      - appname: namespace
-        path: kubernetes/namespace
-        namespace: kube-system # temp
-      - appname: kube-prometheus-stack
-        path: kubernetes/kube-prometheus-stack
-        namespace: kube-system # temp
+    - list:
+        elements:
+          - appname: namespace
+            path: kubernetes/namespace
+            namespace: kube-system # temp
+          - appname: kube-prometheus-stack
+            path: kubernetes/kube-prometheus-stack
+            namespace: kube-system # temp
   template:
     metadata:
-      name: '{{appname}}'
+      name: "{{appname}}"
     spec:
       project: default
       source:
         repoURL: https://github.com/chroju/infrastructure
         targetRevision: HEAD
-        path: '{{path}}'
+        path: "{{path}}"
       destination:
         server: https://kubernetes.default.svc
-        namespace: '{{namespace}}'
+        namespace: "{{namespace}}"
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+          allowEmpty: false
