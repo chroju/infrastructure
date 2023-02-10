@@ -5,6 +5,11 @@ metadata:
   namespace: kube-system
 spec:
   repo: https://prometheus-community.github.io/helm-charts
-  chart: kube-prometheus-stack
-  version: 44.3.0
+  chart: prometheus
+  version: 19.3.3
   targetNamespace: prometheus
+  valuesContent: |-
+    alertmanager:
+      enabled: false
+    prometheus-pushgateway:
+      enabled: false
