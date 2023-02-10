@@ -8,10 +8,16 @@ spec:
     - list:
         elements:
           - appname: namespace
+            repo: https://github.com/chroju/infrastructure
             path: kubernetes/namespace
             namespace: kube-system # temp
           - appname: prometheus
+            repo: https://github.com/chroju/infrastructure
             path: kubernetes/prometheus
+            namespace: kube-system # temp
+          - appname: mastodon
+            repo: https://github.com/mastodon/chart
+            path: .
             namespace: kube-system # temp
   template:
     metadata:
@@ -19,7 +25,7 @@ spec:
     spec:
       project: default
       source:
-        repoURL: https://github.com/chroju/infrastructure
+        repoURL: "{{repo}}"
         targetRevision: HEAD
         path: "{{path}}"
       destination:
