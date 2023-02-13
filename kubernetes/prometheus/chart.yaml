@@ -1,15 +1,19 @@
-apiVersion: helm.cattle.io/v1
-kind: HelmChart
+apiVersion: argoproj.io/v1alpha1
+kind: Application
 metadata:
-  name: prometheus-operator
-  namespace: kube-system
+  name: prometheus
+  namespace: argo-cd
 spec:
-  repo: https://prometheus-community.github.io/helm-charts
-  chart: prometheus
-  version: 19.3.3
-  targetNamespace: prometheus
-  valuesContent: |-
-    alertmanager:
-      enabled: false
-    prometheus-pushgateway:
-      enabled: false
+  source:
+    repoURL: https://prometheus-community.github.io/helm-charts
+    chart: prometheus
+    targetRevision: 19.3.3
+    helm:
+      parameters:
+        alertmanager:
+          enabled: false
+        prometheus-pushgateway:
+          enabled: false
+  destination:
+    server: "https://kubernetes.default.svc"
+    namespace: prometheus
