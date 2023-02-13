@@ -1,19 +1,20 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: prometheus
+  name: prometheus-helm
   namespace: argo-cd
 spec:
+  project: default
   source:
     repoURL: https://prometheus-community.github.io/helm-charts
     chart: prometheus
     targetRevision: 19.3.3
     helm:
       parameters:
-        alertmanager:
-          enabled: false
-        prometheus-pushgateway:
-          enabled: false
+        - name: "alertmanager.enabled"
+          value: "false"
+        - name: "prometheus-pushgateway.enabled"
+          value: "false"
   destination:
     server: "https://kubernetes.default.svc"
     namespace: prometheus
