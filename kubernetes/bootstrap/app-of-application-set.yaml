@@ -2,7 +2,7 @@ apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
   name: bootstrap
-  namespace: default
+  namespace: argo-cd
 spec:
   destination:
     namespace: argo-cd
