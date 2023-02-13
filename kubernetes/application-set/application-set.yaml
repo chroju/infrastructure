@@ -15,10 +15,6 @@ spec:
             repo: https://github.com/chroju/infrastructure
             path: kubernetes/prometheus
             namespace: kube-system # temp
-          - appname: mastodon
-            repo: https://github.com/mastodon/chart
-            path: .
-            namespace: kube-system # temp
   template:
     metadata:
       name: "{{appname}}"
