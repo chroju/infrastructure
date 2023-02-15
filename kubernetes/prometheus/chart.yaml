@@ -15,6 +15,15 @@ spec:
           value: "false"
         - name: "prometheus-pushgateway.enabled"
           value: "false"
+        - name: "extraScrapeConfigs"
+          value: |
+            - job_name: "remo"
+              scrape_interval: 60s
+              dns_sd_configs:
+                - names: ['remo-exporter.remo-exporter']
+                  port: 9352
+                  type: A
+                  refresh_interval: 5s
   destination:
     server: "https://kubernetes.default.svc"
     namespace: prometheus
