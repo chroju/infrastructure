@@ -15,6 +15,10 @@ spec:
             repo: https://github.com/chroju/infrastructure
             path: kubernetes/prometheus
             namespace: kube-system # temp
+          - appname: remo-exporter
+            repo: https://github.com/chroju/infrastructure
+            path: kubernetes/remo-exporter
+            namespace: remo-exporter
           # - appname: external-secrets
           #   repo: https://github.com/chroju/infrastructure
           #   path: kubernetes/external-secrets
