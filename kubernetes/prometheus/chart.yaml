@@ -24,6 +24,13 @@ spec:
                   port: 9352
                   type: A
                   refresh_interval: 5s
+            - job_name: "argocd"
+              scrape_interval: 60s
+              dns_sd_configs:
+                - names: ['argo-cd-argocd-application-controller-metrics.argo-cd']
+                  port: 8082
+                  type: A
+                  refresh_interval: 5s
   destination:
     server: "https://kubernetes.default.svc"
     namespace: prometheus
