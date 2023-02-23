@@ -4,6 +4,7 @@ metadata:
   name: apps
   namespace: argo-cd
 spec:
+  goTemplate: true
   generators:
     - list:
         elements:
@@ -25,16 +26,16 @@ spec:
           #   namespace: kube-system # temp
   template:
     metadata:
-      name: "{{appname}}"
+      name: "{{.appname}}"
     spec:
       project: default
       source:
-        repoURL: "{{repo}}"
+        repoURL: "{{.repo}}"
         targetRevision: HEAD
-        path: "{{path}}"
+        path: "{{.path}}"
       destination:
         server: https://kubernetes.default.svc
-        namespace: "{{namespace}}"
+        namespace: "{{.namespace}}"
       syncPolicy:
         automated:
           prune: true
