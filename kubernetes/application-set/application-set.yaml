@@ -15,7 +15,7 @@ spec:
           - appname: prometheus
             repo: https://github.com/chroju/infrastructure
             path: kubernetes/prometheus
-            namespace: kube-system # temp
+            namespace: argo-cd
           - appname: remo-exporter
             repo: https://github.com/chroju/infrastructure
             path: kubernetes/remo-exporter
@@ -24,7 +24,7 @@ spec:
             repo: https://github.com/chroju/infrastructure
             path: kubernetes/external-secrets
             hook: PreSync
-            namespace: kube-system # temp
+            namespace: argo-cd
   template:
     metadata:
       name: "{{.appname}}"
