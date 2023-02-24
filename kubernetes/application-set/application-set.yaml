@@ -20,13 +20,17 @@ spec:
             repo: https://github.com/chroju/infrastructure
             path: kubernetes/remo-exporter
             namespace: remo-exporter
-          # - appname: external-secrets
-          #   repo: https://github.com/chroju/infrastructure
-          #   path: kubernetes/external-secrets
-          #   namespace: kube-system # temp
+          - appname: external-secrets
+            repo: https://github.com/chroju/infrastructure
+            path: kubernetes/external-secrets
+            hook: PreSync
+            namespace: kube-system # temp
   template:
     metadata:
       name: "{{.appname}}"
+      namespace: argo-cd
+      annotations:
+        argocd.argoproj.io/hook: '{{ default "Sync" .hook }}'
     spec:
       project: default
       source:
