@@ -1,0 +1,31 @@
+alertmanager:
+  enabled: false
+prometheus-pushgateway:
+  enabled: false
+server:
+  extraSecretMounts:
+    - name: password-file
+      mountPath: /etc/secrets
+      subPath: ""
+      secretName: grafanaCloudPassword
+      readOnly: true
+  remoteWrite:
+    - url: "https://prometheus-prod-18-prod-ap-southeast-0.grafana.net/api/prom/push"
+      basic_auth:
+        username: 774278
+        password_file: /etc/secrets/password-file
+extraScrapeConfigs: |
+  - job_name: "remo"
+    scrape_interval: 60s
+    dns_sd_configs:
+      - names: ['remo-exporter.remo-exporter']
+        port: 9352
+        type: A
+        refresh_interval: 5s
+  - job_name: "argocd"
+    scrape_interval: 60s
+    dns_sd_configs:
+      - names: ['argo-cd-argocd-application-controller-metrics.argo-cd']
+        port: 8082
+        type: A
+        refresh_interval: 5s

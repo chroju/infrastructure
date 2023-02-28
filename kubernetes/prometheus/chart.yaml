@@ -10,27 +10,8 @@ spec:
     chart: prometheus
     targetRevision: 19.3.3
     helm:
-      parameters:
-        - name: "alertmanager.enabled"
-          value: "false"
-        - name: "prometheus-pushgateway.enabled"
-          value: "false"
-        - name: "extraScrapeConfigs"
-          value: |
-            - job_name: "remo"
-              scrape_interval: 60s
-              dns_sd_configs:
-                - names: ['remo-exporter.remo-exporter']
-                  port: 9352
-                  type: A
-                  refresh_interval: 5s
-            - job_name: "argocd"
-              scrape_interval: 60s
-              dns_sd_configs:
-                - names: ['argo-cd-argocd-application-controller-metrics.argo-cd']
-                  port: 8082
-                  type: A
-                  refresh_interval: 5s
+      valueFiles:
+        - https://raw.githubusercontent.com/chroju/infrastructure/main/kubernetes/prometheus/values.yaml
   destination:
     server: "https://kubernetes.default.svc"
     namespace: prometheus
