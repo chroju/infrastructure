@@ -25,6 +25,10 @@ spec:
             path: kubernetes/external-secrets
             hook: PreSync
             namespace: argo-cd
+          - appname: grafana
+            repo: https://github.com/chroju/infrastructure
+            path: kubernetes/grafana
+            namespace: grafana
   template:
     metadata:
       name: "{{.appname}}"
