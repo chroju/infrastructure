@@ -3,12 +3,16 @@ alertmanager:
 prometheus-pushgateway:
   enabled: false
 server:
-  extraSecretMounts:
-    - name: password
-      mountPath: /etc/secrets
-      subPath: ""
-      secretName: prometheus-secrets
-      readOnly: true
+  persistentVolume:
+    enabled: true
+    storageClass: prometheus
+    size: 2Gi
+  # extraSecretMounts:
+  #   - name: password
+  #     mountPath: /etc/secrets
+  #     subPath: ""
+  #     secretName: prometheus-secrets
+  #     readOnly: true
   # remoteWrite:
   #   - url: "https://prometheus-prod-18-prod-ap-southeast-0.grafana.net/api/prom/push"
   #     basic_auth:
