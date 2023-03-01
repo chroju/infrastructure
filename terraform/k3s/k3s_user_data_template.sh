@@ -1,5 +1,21 @@
 #!/bin/bash
 
+apt update
+apt install awscli -y
+
+# attach EBS
+INSTANCE_ID=$(curl http://169.254.169.254/latest/meta-data/instance-id)
+aws ec2 attach-volume --volume-id ${ebs_volume_id} --device /dev/sdf --instance-id $INSTANCE_ID --region ap-northeast-1
+
+# add instance name
+aws ec2 create-tags --resources $INSTANCE_ID --tags Key=Name,Value=k3s --region ap-northeast-1
+
+# swap
+dd if=/dev/zero of=/swapfile bs=128M count=16
+chmod 600 /swapfile
+mkswap /swapfile
+swapon /swapfile
+
 # Install k3s
 curl -Ls https://github.com/k3s-io/k3s/releases/download/${k3s_version}/k3s -o /usr/local/bin/k3s
 chmod +x /usr/local/bin/k3s
@@ -43,8 +59,6 @@ systemctl enable k3s
 systemctl start k3s
 
 # Register kubeconfig
-apt update
-apt install awscli -y
 
 KUBE_CONFIG=$(cat /etc/rancher/k3s/k3s.yaml)
 aws ssm put-parameter --region ap-northeast-1 --name /chroju/k3s/kube_config --type SecureString --overwrite --value "$KUBE_CONFIG"
@@ -189,6 +203,16 @@ do
     sleep 10
 done
 
+file -s /dev/nvme1n1 | grep ext4
+if [[ "$?" != '0' ]]; then
+    mkfs -t ext4 /dev/nvme1n1
+fi
+mkdir -p /data/pvs
+mount /dev/nvme1n1 /data/pvs
+chown -R root:root /data/pvs
+chmod -R 755 /data/pvs
+
 kubectl apply -f /tmp/application-set.yaml
 ARGO_CD_PASSWORD=$(kubectl -n argo-cd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d)
 aws ssm put-parameter --region ap-northeast-1 --name /chroju/k3s/argo_cd_password --type SecureString --overwrite --value "$ARGO_CD_PASSWORD"
+aws ssm put-parameter --region ap-northeast-1 --name /chroju/k3s/instance_id --type String --overwrite --value "$INSTANCE_ID"
