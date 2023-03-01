@@ -15,7 +15,7 @@ spec:
           - appname: prometheus
             repo: https://github.com/chroju/infrastructure
             path: kubernetes/prometheus
-            namespace: argo-cd
+            namespace: prometheus
           - appname: remo-exporter
             repo: https://github.com/chroju/infrastructure
             path: kubernetes/remo-exporter
