@@ -90,7 +90,7 @@ EOF
 
 cloudflared service install
 
-# Install ArgoCD and use with cloudflared
+# Install ArgoCD
 
 cat > /tmp/argo-cd-helm-chart.yaml <<EOF
 apiVersion: helm.cattle.io/v1
@@ -102,93 +102,14 @@ spec:
   repo: https://argoproj.github.io/argo-helm
   chart: argo-cd
   targetNamespace: argo-cd
-  # あああ
   valuesContent: |-
     server:
       extraArgs:
         - --insecure # HTTPSを無効化しないとArgo Tunnelから繋がらない
 EOF
 
-cat > /tmp/cloudflare-tunnel.json <<EOF
-{
-  "AccountTag": "${cloudflare_account_id}",
-  "TunnelSecret": "${cloudflare_tunnel.argo_cd.secret}",
-  "TunnelID": "${cloudflare_tunnel.argo_cd.id}"
-}
-EOF
-
-cat > /tmp/cloudflare-deployment.yaml <<EOF
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: argo-cd-tunnel
-  namespace: argo-cd
-spec:
-  selector:
-    matchLabels:
-      app: argo-cd-tunnel
-  template:
-    metadata:
-      labels:
-        app: argo-cd-tunnel
-    spec:
-      volumes:
-      - name: cloudflared-auth-volume
-        secret:
-          secretName: cloudflared-auth
-      - name: cloudflared-config
-        configMap:
-          name: cloudflared-config
-          items:
-            - key: config.yaml
-              path: config.yaml
-      containers:
-      - name: cloudflared-tunnel
-        image: cloudflare/cloudflared:${cloudflared_version}-amd64
-        args:
-        - tunnel
-        - --config
-        - /etc/cloudflared/config.yaml
-        - run
-        volumeMounts:
-          - name: cloudflared-auth-volume
-            mountPath: /etc/cloudflared/tunnel.json
-            subPath: cloudflare-tunnel.json
-            readOnly: true
-          - name: cloudflared-config
-            mountPath: /etc/cloudflared/config.yaml
-            subPath: config.yaml
-            readOnly: true
-        env:
-          - name: TUNNEL_NAME
-            value: argo_cd_tunnel
-EOF
-
-cat > /tmp/cloudflare-configmap.yaml <<EOF
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: cloudflared-config
-  namespace: argo-cd
-data:
-  config.yaml: |
-    tunnel: ${cloudflare_tunnel.argo_cd.id}
-    credentials-file: /etc/cloudflared/tunnel.json
-    no-autoupdate: true
-    
-    ingress:
-      - hostname: ${cloudflare_tunnel.argo_cd.hostname}
-        service: http://argo-cd-argocd-server.argo-cd
-      - service: http_status:404
-EOF
-
 kubectl create ns argo-cd
 kubectl apply -f /tmp/argo-cd-helm-chart.yaml
-
-kubectl create secret -n argo-cd generic cloudflared-auth \
-  --from-file=./tmp/cloudflare-tunnel.json
-kubectl apply -f /tmp/cloudflare-configmap.yaml
-kubectl apply -f /tmp/cloudflare-deployment.yaml
 
 # Apply ApplicationSet
 
