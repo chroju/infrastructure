@@ -12,6 +12,10 @@ spec:
             repo: https://github.com/chroju/infrastructure
             path: kubernetes/namespace
             namespace: kube-system # temp
+          - appname: cloudflared
+            repo: https://github.com/chroju/infrastructure
+            path: kubernetes/cloudflared
+            namespace: cloudflared
           - appname: prometheus
             repo: https://github.com/chroju/infrastructure
             path: kubernetes/prometheus
