@@ -72,14 +72,15 @@ resource "aws_spot_instance_request" "bitwarden" {
   ami                         = data.aws_ami.ubuntu_22_04_latest.id
   associate_public_ip_address = true
   subnet_id                   = data.aws_subnet.public.id
-  iam_instance_profile        = "AmazonEC2RoleforSSM" # TODO
-  key_name                    = "chiang"              # TODO
+  iam_instance_profile        = aws_iam_instance_profile.bitwarden_role.name
+  key_name                    = "chiang" # TODO
   vpc_security_group_ids      = [data.aws_security_group.external_only.id]
 
   disable_api_termination = true
 
   user_data = templatefile("${path.module}/bitwarden_user_data_template.sh",
     {
+      ebs_volume_id         = aws_ebs_volume.bitwarden_data.id,
       cloudflared_version   = local.cloudflared_version,
       cloudflare_account_id = var.cloudflare_account_id,
       cloudflare_tunnel = {
@@ -121,10 +122,4 @@ resource "aws_ebs_volume" "bitwarden_data" {
   tags = {
     Name = "bitwarden_data"
   }
-}
-
-resource "aws_volume_attachment" "ebs" {
-  device_name = "/dev/sdf"
-  volume_id   = aws_ebs_volume.bitwarden_data.id
-  instance_id = aws_spot_instance_request.bitwarden.spot_instance_id
 }
