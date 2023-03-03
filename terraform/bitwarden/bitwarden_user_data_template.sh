@@ -3,45 +3,40 @@
 hostnamectl set-hostname bitwarden
 
 #####
-## Prepare to install bitwarden
+## Install docker
 #####
 
-# manage user and group
-groupadd docker
-usermod -aG docker ubuntu
-
-# download bitwarden install script
-curl -Lso /home/ubuntu/bitwarden.sh https://go.btwrdn.co/bw-sh && chmod 700 /home/ubuntu/bitwarden.sh && chown ubuntu:ubuntu /home/ubuntu/bitwarden.sh
-
-#####
-## mount EBS
-#####
-
-file -s /dev/nvme1n1 | grep ext4
-if [[ "$?" != '0' ]]; then
-    mkfs -t ext4 /dev/nvme1n1
-fi
-mkdir /home/ubuntu/bwdata
-mount /dev/nvme1n1 /home/ubuntu/bwdata
-chown -R ubuntu:ubuntu /home/ubuntu/bwdata
-echo '/dev/nvme1n1   /home/ubuntu/bwdata       ext4    defaults,nofail   0   2' >> /etc/fstab
-
-#####
-# Install Docker
-#####
+apt-get remove docker docker-engine docker.io containerd runc
+apt-get update
+apt-get install -y ca-certificates curl gnupg lsb-release awscli
 
 # https://docs.docker.com/engine/install/ubuntu/
-
-apt-get update
-apt-get install -y ca-certificates curl gnupg lsb-release
-mkdir -p /etc/apt/keyrings
-curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+mkdir -m 0755 -p /etc/apt/keyrings
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
 echo \
   "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
   $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
 
 apt-get update
-apt-get install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin
+apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+
+# manage user and group
+groupadd docker
+usermod -aG docker ubuntu
+
+#####
+## add instance name
+#####
+
+INSTANCE_ID=$(curl http://169.254.169.254/latest/meta-data/instance-id)
+aws ec2 create-tags --resources $INSTANCE_ID --tags Key=Name,Value=bitwarden --region ap-northeast-1
+
+#####
+## attach EBS
+#####
+
+INSTANCE_ID=$(curl http://169.254.169.254/latest/meta-data/instance-id)
+aws ec2 attach-volume --volume-id ${ebs_volume_id} --device /dev/sdf --instance-id $INSTANCE_ID --region ap-northeast-1
 
 
 #####
@@ -74,6 +69,20 @@ EOF
 cloudflared service install
 
 #####
+## mount EBS
+#####
+
+file -s /dev/nvme1n1 | grep ext4
+if [[ "$?" != '0' ]]; then
+    mkfs -t ext4 /dev/nvme1n1
+fi
+mkdir /home/ubuntu/bwdata
+mount /dev/nvme1n1 /home/ubuntu/bwdata
+chown -R ubuntu:ubuntu /home/ubuntu/bwdata
+echo '/dev/nvme1n1   /home/ubuntu/bwdata       ext4    defaults,nofail   0   2' >> /etc/fstab
+
+
+#####
 ## crontab
 #####
 
@@ -83,9 +92,33 @@ cat >> /tmp/crontab <<EOF
 30 22 * * * docker image prune -f
 30 23 * * * docker container prune -f
 EOF
-crontab -u bitwarden /tmp/crontab
+crontab -u root /tmp/crontab
 
-sudo -u ubuntu /home/ubuntu/bitwarden.sh start
+#####
+## Bitwarden
+#####
+
+# download bitwarden install script
+curl -Lso /home/ubuntu/bitwarden.sh https://go.btwrdn.co/bw-sh && chmod 700 /home/ubuntu/bitwarden.sh && chown ubuntu:ubuntu /home/ubuntu/bitwarden.sh
+
+cat > /etc/systemd/system/bitwarden.service <<EOF
+[Unit]
+Description=Bitwarden
+
+[Install]
+WantedBy=multi-user.target
+
+[Service]
+Type=oneshot
+RestartSec=5s
+RemainAfterExit=true
+ExecStart=/home/ubuntu/bitwarden.sh start
+ExecStop=/home/ubuntu/bitwarden.sh stop
+EOF
+
+systemctl daemon-reload
+systemctl enable bitwarden
+systemctl start bitwarden
 
 #####
 # Mackerel
