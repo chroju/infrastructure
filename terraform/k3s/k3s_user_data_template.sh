@@ -15,6 +15,7 @@ dd if=/dev/zero of=/swapfile bs=128M count=16
 chmod 600 /swapfile
 mkswap /swapfile
 swapon /swapfile
+echo '/swapfile swap swap defaults 0 0' >> /etc/fstab
 
 # Install k3s
 curl -Ls https://github.com/k3s-io/k3s/releases/download/${k3s_version}/k3s -o /usr/local/bin/k3s
@@ -124,6 +125,8 @@ do
     sleep 10
 done
 
+# mount
+
 file -s /dev/nvme1n1 | grep ext4
 if [[ "$?" != '0' ]]; then
     mkfs -t ext4 /dev/nvme1n1
@@ -132,6 +135,9 @@ mkdir -p /data/pvs
 mount /dev/nvme1n1 /data/pvs
 chown -R root:root /data/pvs
 chmod -R 755 /data/pvs
+echo '/dev/nvme1n1  /data/pvs ext4 defaults,nofail 0 2' >> /etc/fstab
+
+# apply application set
 
 kubectl apply -f /tmp/application-set.yaml
 ARGO_CD_PASSWORD=$(kubectl -n argo-cd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d)
