@@ -5,13 +5,16 @@ metadata:
   namespace: argo-cd
 spec:
   project: default
-  source:
-    repoURL: https://prometheus-community.github.io/helm-charts
-    chart: prometheus
-    targetRevision: 19.3.3
-    helm:
-      valueFiles:
-        - https://raw.githubusercontent.com/chroju/infrastructure/main/kubernetes/prometheus/values.yaml
+  sources:
+    - repoURL: https://github.com/chroju/infrastructure
+      targetRevision: main
+      ref: gitRepo
+    - repoURL: https://prometheus-community.github.io/helm-charts
+      chart: prometheus
+      targetRevision: 19.3.3
+      helm:
+        valueFiles:
+          - $gitRepo/kubernetes/prometheus/values/values.yaml
   destination:
     server: "https://kubernetes.default.svc"
     namespace: prometheus
