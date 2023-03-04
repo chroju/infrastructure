@@ -101,7 +101,7 @@ resource "aws_spot_instance_request" "k3s" {
 
   root_block_device {
     volume_size = 30
-    volume_type = "gp2"
+    volume_type = "gp3"
     # encrypted   = true
     # kms_key_id  = aws_kms_alias.k3s.id
   }
@@ -123,6 +123,7 @@ resource "aws_ebs_volume" "k3s_data" {
   size              = 10
   encrypted         = true
   kms_key_id        = aws_kms_key.k3s.arn
+  type              = "gp3"
 
   tags = {
     Name = "k3s_data"

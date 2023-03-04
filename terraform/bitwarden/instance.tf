@@ -96,7 +96,7 @@ resource "aws_spot_instance_request" "bitwarden" {
 
   root_block_device {
     volume_size = 35
-    volume_type = "gp2"
+    volume_type = "gp3"
     # encrypted   = true
     # kms_key_id  = aws_kms_alias.k3s.id
   }
@@ -118,6 +118,7 @@ resource "aws_ebs_volume" "bitwarden_data" {
   size              = 10
   encrypted         = true
   kms_key_id        = aws_kms_key.bitwarden.arn
+  type              = "gp3"
 
   tags = {
     Name = "bitwarden_data"
