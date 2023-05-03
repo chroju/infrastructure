@@ -68,17 +68,52 @@ data "aws_pricing_product" "ec2_instance" {
   }
 }
 
-resource "aws_spot_instance_request" "k3s" {
-  ami                         = data.aws_ami.ubuntu_22_04_latest.id
-  associate_public_ip_address = true
-  subnet_id                   = data.aws_subnet.public.id
-  iam_instance_profile        = aws_iam_instance_profile.k3s_node_role.name
-  key_name                    = "chiang" # TODO
-  vpc_security_group_ids      = [data.aws_security_group.external_only.id]
+resource "aws_ec2_fleet" "k3s" {
+  type = "instant"
 
-  disable_api_termination = true
+  launch_template_config {
+    launch_template_specification {
+      launch_template_id = aws_launch_template.k3s.id
+      version            = aws_launch_template.k3s.latest_version
+    }
+  }
 
-  user_data = templatefile("${path.module}/k3s_user_data_template.sh",
+  target_capacity_specification {
+    default_target_capacity_type = "spot"
+    total_target_capacity        = 1
+  }
+
+}
+
+resource "aws_launch_template" "k3s" {
+  name                                 = "k3s"
+  image_id                             = data.aws_ami.ubuntu_22_04_latest.id
+  instance_type                        = local.k3s_instance_type
+  ebs_optimized                        = true
+  key_name                             = "chiang" # TODO
+  disable_api_termination              = true
+  instance_initiated_shutdown_behavior = "stop"
+
+  iam_instance_profile {
+    arn = aws_iam_instance_profile.k3s_node_role.arn
+  }
+
+  network_interfaces {
+    subnet_id                   = data.aws_subnet.public.id
+    associate_public_ip_address = true
+    delete_on_termination       = true
+    security_groups             = [data.aws_security_group.external_only.id]
+  }
+
+  block_device_mappings {
+    device_name = "/dev/sda1" # root device
+    ebs {
+      volume_size = 30
+      volume_type = "gp3"
+    }
+  }
+
+  user_data = base64encode(templatefile("${path.module}/k3s_user_data_template.sh",
     {
       k3s_version           = local.k3s_version,
       ebs_volume_id         = aws_ebs_volume.k3s_data.id,
@@ -97,26 +132,65 @@ resource "aws_spot_instance_request" "k3s" {
         }
       }
     }
-  )
+  ))
 
-  root_block_device {
-    volume_size = 30
-    volume_type = "gp3"
-    # encrypted   = true
-    # kms_key_id  = aws_kms_alias.k3s.id
-  }
-
-  # spot instance
-  spot_price = values(values(jsondecode(data.aws_pricing_product.ec2_instance.result).terms.OnDemand)[0].priceDimensions)[0].pricePerUnit.USD * 0.65
-
-  instance_type                        = local.k3s_instance_type
-  instance_initiated_shutdown_behavior = "stop"
-  wait_for_fulfillment                 = true
-
-  tags = {
-    "Name" = "k3s-zero-trust"
+  instance_market_options {
+    market_type = "spot"
+    spot_options {
+      max_price = values(values(jsondecode(data.aws_pricing_product.ec2_instance.result).terms.OnDemand)[0].priceDimensions)[0].pricePerUnit.USD * 0.65
+    }
   }
 }
+
+# resource "aws_spot_instance_request" "k3s" {
+#   ami                         = data.aws_ami.ubuntu_22_04_latest.id
+#   associate_public_ip_address = true
+#   subnet_id                   = data.aws_subnet.public.id
+#   iam_instance_profile        = aws_iam_instance_profile.k3s_node_role.name
+#   key_name                    = "chiang" # TODO
+#   vpc_security_group_ids      = [data.aws_security_group.external_only.id]
+
+#   disable_api_termination = true
+
+#   user_data = templatefile("${path.module}/k3s_user_data_template.sh",
+#     {
+#       k3s_version           = local.k3s_version,
+#       ebs_volume_id         = aws_ebs_volume.k3s_data.id,
+#       cloudflared_version   = local.cloudflared_version,
+#       cloudflare_account_id = var.cloudflare_account_id,
+#       cloudflare_tunnel = {
+#         kubectl = {
+#           id       = cloudflare_argo_tunnel.k3s_zero_trust_tunnel.id,
+#           secret   = random_password.tunnel_secret.result,
+#           hostname = var.cloudflare_tunnel_kubectl_hostname,
+#         }
+#         argo_cd = {
+#           id       = cloudflare_argo_tunnel.argo_cd_zero_trust_tunnel.id,
+#           secret   = random_password.argo_cd_tunnel_secret.result,
+#           hostname = var.cloudflare_tunnel_argo_cd_hostname,
+#         }
+#       }
+#     }
+#   )
+
+#   root_block_device {
+#     volume_size = 30
+#     volume_type = "gp3"
+#     # encrypted   = true
+#     # kms_key_id  = aws_kms_alias.k3s.id
+#   }
+
+#   # spot instance
+#   spot_price = values(values(jsondecode(data.aws_pricing_product.ec2_instance.result).terms.OnDemand)[0].priceDimensions)[0].pricePerUnit.USD * 0.65
+
+#   instance_type                        = local.k3s_instance_type
+#   instance_initiated_shutdown_behavior = "stop"
+#   wait_for_fulfillment                 = true
+
+#   tags = {
+#     "Name" = "k3s-zero-trust"
+#   }
+# }
 
 resource "aws_ebs_volume" "k3s_data" {
   availability_zone = "ap-northeast-1d"
