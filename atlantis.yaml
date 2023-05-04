@@ -6,4 +6,3 @@ projects:
   - dir: terraform/bitwarden
     autoplan:
       when_modified: ["*.tf"]
-    apply_requirements: [mergeable, approved]
