@@ -2,7 +2,9 @@ version: 3
 # parallel_plan: true
 # parallel_apply: true
 projects:
-  # Grow Learn
-  - dir: terraform/bitwarden
+  - dir: terraform/a
+    autoplan:
+      when_modified: ["*.tf"]
+  - dir: terraform/b
     autoplan:
       when_modified: ["*.tf"]
