@@ -99,7 +99,7 @@ crontab -u root /tmp/crontab
 #####
 
 # download bitwarden install script
-curl -Lso /home/ubuntu/bitwarden.sh https://go.btwrdn.co/bw-sh && chmod 700 /home/ubuntu/bitwarden.sh && chown ubuntu:ubuntu /home/ubuntu/bitwarden.sh
+curl -Lso /home/ubuntu/bitwarden.sh "https://func.bitwarden.com/api/dl/?app=self-host&platform=linux" && chmod 700 /home/ubuntu/bitwarden.sh && chown ubuntu:ubuntu /home/ubuntu/bitwarden.sh
 
 cat > /etc/systemd/system/bitwarden.service <<EOF
 [Unit]
