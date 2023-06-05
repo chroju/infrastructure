@@ -7,7 +7,7 @@ terraform {
     }
     cloudflare = {
       source  = "cloudflare/cloudflare"
-      version = "3.28.0"
+      version = "4.7.1"
     }
   }
 
