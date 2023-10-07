@@ -33,6 +33,10 @@ spec:
             repo: https://github.com/chroju/infrastructure
             path: kubernetes/grafana
             namespace: grafana
+          - appname: bitwarden
+            repo: https://github.com/chroju/infrastructure
+            path: kubernetes/bitwarden
+            namespace: bitwarden
   template:
     metadata:
       name: "{{.appname}}"

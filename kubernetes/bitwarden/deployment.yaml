@@ -1,0 +1,71 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: bitwarden
+  name: bitwarden
+  namespace: bitwarden
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      pod: bitwarden
+  template:
+    metadata:
+      labels:
+        pod: bitwarden
+    spec:
+      containers:
+        - image: bitwarden/self-host:beta
+          name: bitwarden
+          # livenessProbe:
+          #   httpGet:
+          #     path: /ready
+          #     port: 2000
+          #   failureThreshold: 1
+          #   initialDelaySeconds: 10
+          #   periodSeconds: 10
+          resources:
+            requests:
+              cpu: 200m
+              memory: 250Mi
+            limits:
+              cpu: 200m
+              memory: 250Mi
+          ports:
+            - containerPort: 8443
+          env:
+            - name: BW_DOMAIN
+              value: bw.chroju.dev
+            - name: BW_DB_PROVIDER
+              value: postgresql
+            - name: BW_DB_SERVER
+              value: postgres
+            - name: BW_DB_USERNAME
+              value: bitwarden
+            - name: BW_DB_PASSWORD
+              value: bitwarden
+            - name: BW_DB_DATABASE
+              value: bitwarden
+        - image: public.ecr.aws/docker/library/postgres:alpine3.18
+          name: postgres
+          env:
+            - name: POSTGRES_DB
+              value: bitwarden
+            - name: POSTGRES_USER
+              value: bitwarden
+            - name: POSTGRES_PASSWORD
+              value: bitwarden
+              # valueFrom:
+              #   secretKeyRef:
+              #     name: bitwarden-secrets
+              #     key: postgres-password
+          ports:
+            - containerPort: 80
+          resources:
+            requests:
+              cpu: 200m
+              memory: 250Mi
+            limits:
+              cpu: 200m
+              memory: 250Mi
