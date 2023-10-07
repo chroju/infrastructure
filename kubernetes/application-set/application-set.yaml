@@ -16,10 +16,10 @@ spec:
             repo: https://github.com/chroju/infrastructure
             path: kubernetes/cloudflared
             namespace: cloudflared
-          - appname: prometheus
-            repo: https://github.com/chroju/infrastructure
-            path: kubernetes/prometheus
-            namespace: prometheus
+          # - appname: prometheus
+          #   repo: https://github.com/chroju/infrastructure
+          #   path: kubernetes/prometheus
+          #   namespace: prometheus
           - appname: remo-exporter
             repo: https://github.com/chroju/infrastructure
             path: kubernetes/remo-exporter
@@ -29,10 +29,10 @@ spec:
             path: kubernetes/external-secrets
             hook: PreSync
             namespace: argo-cd
-          - appname: grafana
-            repo: https://github.com/chroju/infrastructure
-            path: kubernetes/grafana
-            namespace: grafana
+          # - appname: grafana
+          #   repo: https://github.com/chroju/infrastructure
+          #   path: kubernetes/grafana
+          #   namespace: grafana
           - appname: bitwarden
             repo: https://github.com/chroju/infrastructure
             path: kubernetes/bitwarden
