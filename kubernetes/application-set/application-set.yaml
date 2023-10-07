@@ -37,6 +37,10 @@ spec:
             repo: https://github.com/chroju/infrastructure
             path: kubernetes/bitwarden
             namespace: bitwarden
+          - appname: pleroma
+            repo: https://github.com/chroju/infrastructure
+            path: kubernetes/pleroma
+            namespace: pleroma
   template:
     metadata:
       name: "{{.appname}}"

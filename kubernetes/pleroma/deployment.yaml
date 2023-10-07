@@ -1,0 +1,89 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: pleroma
+  name: pleroma
+  namespace: pleroma
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: pleroma
+  template:
+    metadata:
+      labels:
+        app: pleroma
+    spec:
+      containers:
+        - image: ghcr.io/chroju/docker-pleroma:master@sha256:170a75ab612c0adf2f6302ba3db128064392267807d79ca5d6b1062b9e776cff
+          name: pleroma
+          # livenessProbe:
+          #   httpGet:
+          #     path: /ready
+          #     port: 2000
+          #   failureThreshold: 1
+          #   initialDelaySeconds: 10
+          #   periodSeconds: 10
+          resources:
+            requests:
+              cpu: 200m
+              memory: 250Mi
+            limits:
+              cpu: 200m
+              memory: 250Mi
+          ports:
+            - containerPort: 4000
+          env:
+            - name: DOMAIN
+              value: pleroma.chroju.dev
+            - name: INSTANCE_NAME
+              value: pleroma
+            - name: ADMIN_EMAIL
+              value: chor.chroju@gmail.com
+            - name: NOTIFY_EMAIL
+              value: chor.chroju@gmail.com
+            - name: DB_HOST
+              value: localhost
+            - name: DB_NAME
+              value: pleroma
+            - name: DB_USER
+              value: pleroma
+            - name: DB_PASS
+              value: ChangeMe!
+          volumeMounts:
+            - mountPath: /var/lib/pleroma
+              name: pleroma-pv
+        - image: public.ecr.aws/docker/library/postgres:alpine3.18
+          name: db
+          # livenessProbe:
+          #   httpGet:
+          #     path: /ready
+          #     port: 2000
+          #   failureThreshold: 1
+          #   initialDelaySeconds: 10
+          #   periodSeconds: 10
+          resources:
+            requests:
+              cpu: 200m
+              memory: 250Mi
+            limits:
+              cpu: 200m
+              memory: 250Mi
+          env:
+            - name: POSTGRES_DB
+              value: pleroma
+            - name: POSTGRES_USER
+              value: pleroma
+            - name: POSTGRES_PASSWORD
+              value: ChangeMe!
+          volumeMounts:
+            - mountPath: /var/lib/postgresql/data
+              name: pleroma-data-pv
+      volumes:
+        - name: pleroma-pv
+          persistentVolumeClaim:
+            claimName: pleroma-pvc
+        - name: pleroma-data-pv
+          persistentVolumeClaim:
+            claimName: pleroma-data-pvc
