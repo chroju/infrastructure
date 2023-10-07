@@ -33,42 +33,12 @@ spec:
               cpu: 200m
               memory: 250Mi
           ports:
-            - containerPort: 8443
+            - containerPort: 80
           env:
             - name: BW_DOMAIN
               value: bw.chroju.dev
             - name: BW_DB_PROVIDER
-              value: postgresql
-            - name: BW_DB_SERVER
-              value: postgres
-            - name: BW_DB_USERNAME
-              value: bitwarden
-            - name: BW_DB_PASSWORD
-              value: bitwarden
-            - name: BW_DB_DATABASE
-              value: bitwarden
-        - image: public.ecr.aws/docker/library/postgres:alpine3.18
-          name: postgres
-          env:
-            - name: POSTGRES_DB
-              value: bitwarden
-            - name: POSTGRES_USER
-              value: bitwarden
-            - name: POSTGRES_PASSWORD
-              value: bitwarden
-              # valueFrom:
-              #   secretKeyRef:
-              #     name: bitwarden-secrets
-              #     key: postgres-password
-          ports:
-            - containerPort: 80
-          resources:
-            requests:
-              cpu: 200m
-              memory: 250Mi
-            limits:
-              cpu: 200m
-              memory: 250Mi
+              value: sqlite
           volumeMounts:
             - mountPath: /etc/bitwarden
               name: bitwarden-pv
