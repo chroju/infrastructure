@@ -33,12 +33,22 @@ spec:
               cpu: 200m
               memory: 250Mi
           ports:
-            - containerPort: 80
+            - containerPort: 8080
           env:
             - name: BW_DOMAIN
               value: bw.chroju.dev
             - name: BW_DB_PROVIDER
               value: sqlite
+            - name: BW_INSTALLATION_ID
+              valueFrom:
+                secretKeyRef:
+                  name: bitwarden-secrets
+                  key: bw-installation-id
+            - name: BW_INSTALLATION_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: bitwarden-secrets
+                  key: bw-installation-key
           volumeMounts:
             - mountPath: /etc/bitwarden
               name: bitwarden-pv
