@@ -16,7 +16,7 @@ spec:
         app: pleroma
     spec:
       containers:
-        - image: ghcr.io/chroju/docker-pleroma:master@sha256:170a75ab612c0adf2f6302ba3db128064392267807d79ca5d6b1062b9e776cff
+        - image: ghcr.io/chroju/docker-pleroma:master@sha256:e86b94dd246ff7960560f81b687a1c6fbbbefd6c6b46dd42859cec0b725001cf
           name: pleroma
           # livenessProbe:
           #   httpGet:
