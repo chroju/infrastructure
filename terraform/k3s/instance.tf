@@ -10,7 +10,7 @@ data "aws_ami" "ubuntu_22_04_latest" {
 
   filter {
     name   = "name"
-    values = ["ubuntu/images/hvm-ssd/ubuntu-jammy-22.04-amd64-server-*"]
+    values = ["ubuntu/images/hvm-ssd/ubuntu-jammy-22.04-arm64-server-*"]
   }
 
   filter {
@@ -68,17 +68,39 @@ data "aws_pricing_product" "ec2_instance" {
   }
 }
 
-resource "aws_spot_instance_request" "k3s" {
-  ami                         = data.aws_ami.ubuntu_22_04_latest.id
-  associate_public_ip_address = true
-  subnet_id                   = data.aws_subnet.public.id
-  iam_instance_profile        = aws_iam_instance_profile.k3s_node_role.name
-  key_name                    = "chiang" # TODO
-  vpc_security_group_ids      = [data.aws_security_group.external_only.id]
+resource "aws_launch_template" "k3s" {
+  name          = "k3s"
+  image_id      = data.aws_ami.ubuntu_22_04_latest.id
+  key_name      = "chiang" # TODO
+  instance_type = local.k3s_instance_type
 
-  disable_api_termination = true
+  network_interfaces {
+    associate_public_ip_address = true
+    subnet_id                   = data.aws_subnet.public.id
+    security_groups             = [data.aws_security_group.external_only.id]
+  }
 
-  user_data = templatefile("${path.module}/k3s_user_data_template.sh",
+  iam_instance_profile {
+    name = aws_iam_instance_profile.k3s_node_role.name
+  }
+
+  block_device_mappings {
+    device_name = "/dev/sda1"
+    ebs {
+      volume_size           = 30
+      volume_type           = "gp3"
+      delete_on_termination = true
+    }
+  }
+
+  instance_market_options {
+    market_type = "spot"
+    spot_options {
+      max_price = values(values(jsondecode(data.aws_pricing_product.ec2_instance.result).terms.OnDemand)[0].priceDimensions)[0].pricePerUnit.USD * 0.65
+    }
+  }
+
+  user_data = base64encode(templatefile("${path.module}/k3s_user_data_template.sh",
     {
       k3s_version           = local.k3s_version,
       ebs_volume_id         = aws_ebs_volume.k3s_data.id,
@@ -97,24 +119,23 @@ resource "aws_spot_instance_request" "k3s" {
         }
       }
     }
-  )
-
-  root_block_device {
-    volume_size = 30
-    volume_type = "gp3"
-    # encrypted   = true
-    # kms_key_id  = aws_kms_alias.k3s.id
-  }
-
-  # spot instance
-  spot_price = values(values(jsondecode(data.aws_pricing_product.ec2_instance.result).terms.OnDemand)[0].priceDimensions)[0].pricePerUnit.USD * 0.65
-
-  instance_type                        = local.k3s_instance_type
-  instance_initiated_shutdown_behavior = "stop"
-  wait_for_fulfillment                 = true
+  ))
 
   tags = {
     "Name" = "k3s-zero-trust"
+  }
+}
+
+resource "aws_autoscaling_group" "k3s" {
+  name               = "k3s"
+  availability_zones = ["ap-northeast-1d"]
+  desired_capacity   = 1
+  max_size           = 1
+  min_size           = 1
+
+  launch_template {
+    id      = aws_launch_template.k3s.id
+    version = aws_launch_template.k3s.latest_version
   }
 }
 

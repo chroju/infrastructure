@@ -18,7 +18,7 @@ swapon /swapfile
 echo '/swapfile swap swap defaults 0 0' >> /etc/fstab
 
 # Install k3s
-curl -Ls https://github.com/k3s-io/k3s/releases/download/${k3s_version}/k3s -o /usr/local/bin/k3s
+curl -Ls https://github.com/k3s-io/k3s/releases/download/${k3s_version}/k3s-arm64 -o /usr/local/bin/k3s
 chmod +x /usr/local/bin/k3s
 ln -s /usr/local/bin/k3s /usr/local/bin/kubectl
 
@@ -65,7 +65,7 @@ KUBE_CONFIG=$(cat /etc/rancher/k3s/k3s.yaml)
 aws ssm put-parameter --region ap-northeast-1 --name /chroju/k3s/kube_config --type SecureString --overwrite --value "$KUBE_CONFIG"
 
 # Install cloudflared for kubectl (Kubernetes API)
-curl -Ls https://github.com/cloudflare/cloudflared/releases/download/${cloudflared_version}/cloudflared-linux-amd64.deb -o /tmp/cloudflared.deb
+curl -Ls https://github.com/cloudflare/cloudflared/releases/download/${cloudflared_version}/cloudflared-linux-arm64.deb -o /tmp/cloudflared.deb
 dpkg -i ./tmp/cloudflared.deb
 
 mkdir -p /root/.cloudflared
