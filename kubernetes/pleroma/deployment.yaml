@@ -51,7 +51,10 @@ spec:
             - name: DB_USER
               value: pleroma
             - name: DB_PASS
-              value: ChangeMe!
+              valueFrom:
+                secretKeyRef:
+                  name: pleroma-secrets
+                  key: pleroma-db-password
           volumeMounts:
             - mountPath: /var/lib/pleroma
               name: pleroma-pv
@@ -79,7 +82,10 @@ spec:
             - name: POSTGRES_USER
               value: pleroma
             - name: POSTGRES_PASSWORD
-              value: ChangeMe!
+              valueFrom:
+                secretKeyRef:
+                  name: pleroma-secrets
+                  key: pleroma-db-password
           volumeMounts:
             - mountPath: /var/lib/postgresql/data
               name: pleroma-data-pv
