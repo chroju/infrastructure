@@ -16,7 +16,8 @@ spec:
         app: pleroma
     spec:
       containers:
-        - image: ghcr.io/chroju/docker-pleroma:master@sha256:e86b94dd246ff7960560f81b687a1c6fbbbefd6c6b46dd42859cec0b725001cf
+        - image: ghcr.io/chroju/docker-pleroma:master
+          imagePullPolicy: Always
           name: pleroma
           # livenessProbe:
           #   httpGet:
@@ -54,6 +55,8 @@ spec:
           volumeMounts:
             - mountPath: /var/lib/pleroma
               name: pleroma-pv
+            # - mountPath: /etc/pleroma
+            #   name: pleroma-config-volume
         - image: public.ecr.aws/docker/library/postgres:alpine3.18
           name: db
           # livenessProbe:
@@ -87,3 +90,11 @@ spec:
         - name: pleroma-data-pv
           persistentVolumeClaim:
             claimName: pleroma-data-pvc
+        # - name: pleroma-config-volume
+        #   configMap:
+        #     name: pleroma-config
+        #     defaultMode: 0400
+        #     items:
+        #     - key: config
+        #       path: config.exs
+        #       mode: 0400
