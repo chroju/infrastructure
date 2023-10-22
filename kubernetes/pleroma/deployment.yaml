@@ -15,6 +15,8 @@ spec:
       labels:
         app: pleroma
     spec:
+      securityContext:
+        fsGroup: 911
       containers:
         - image: ghcr.io/chroju/docker-pleroma:master
           imagePullPolicy: Always
@@ -26,6 +28,9 @@ spec:
           #   failureThreshold: 1
           #   initialDelaySeconds: 10
           #   periodSeconds: 10
+          securityContext:
+            runAsGroup: 911
+            runAsUser: 911
           resources:
             requests:
               cpu: 200m
@@ -89,6 +94,9 @@ spec:
           volumeMounts:
             - mountPath: /var/lib/postgresql/data
               name: pleroma-data-pv
+            - mountPath: /etc/pleroma/config.exs
+              subPath: config.exs
+              name: pleroma-config-volume
       volumes:
         - name: pleroma-pv
           persistentVolumeClaim:
@@ -96,11 +104,10 @@ spec:
         - name: pleroma-data-pv
           persistentVolumeClaim:
             claimName: pleroma-data-pvc
-        # - name: pleroma-config-volume
-        #   configMap:
-        #     name: pleroma-config
-        #     defaultMode: 0400
-        #     items:
-        #     - key: config
-        #       path: config.exs
-        #       mode: 0400
+        - name: pleroma-config-volume
+          configMap:
+            name: pleroma-config
+            items:
+            - key: config
+              path: config.exs
+              mode: 0440
