@@ -16,7 +16,7 @@ spec:
         pod: bitwarden
     spec:
       containers:
-        - image: bitwarden/self-host:beta
+        - image: bitwarden/self-host:2024.1.0-beta
           name: bitwarden
           # livenessProbe:
           #   httpGet:
