@@ -28,6 +28,12 @@ data:
       redirect_on_failure: true,
       base_url: "https://cache.domain.tld"
 
+    config :pleroma, Pleroma.Uploaders.S3,
+      bucket: "chroju-pleroma-data"
+
+    config :ex_aws, :s3,
+      host: "s3.ap-northeast-1.amazonaws.com"
+
     config :pleroma, Pleroma.Repo,
       adapter: Ecto.Adapters.Postgres,
       username: System.get_env("DB_USER", "pleroma"),
@@ -45,6 +51,7 @@ data:
     config :pleroma, Pleroma.Uploaders.Local, uploads: "/var/lib/pleroma/uploads"
     config :pleroma, Pleroma.Upload.Filter.Mogrify, args: ["strip"]
     config :pleroma, Pleroma.Upload,
+      uploader: Pleroma.Uploaders.S3,
       filters: [Pleroma.Upload.Filter.Dedupe,Pleroma.Upload.Filter.AnonymizeFilename,Pleroma.Upload.Filter.Mogrify]
 
     config :pleroma, :frontend_configurations,
