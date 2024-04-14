@@ -1,13 +1,15 @@
 #!/bin/bash
 
 apt update
-apt install awscli -y
+apt install awscli git binutils rustc cargo pkg-config libssl-dev -y
+git clone https://github.com/aws/efs-utils /tmp/efs-utils
+cd /tmp/efs-utils
+./build-deb.sh
+apt-get install /tmp/efs-utils/build/amazon-efs-utils*deb -y
 
-# attach EBS
-INSTANCE_ID=$(curl http://169.254.169.254/latest/meta-data/instance-id)
-aws ec2 attach-volume --volume-id ${ebs_volume_id} --device /dev/sdf --instance-id $INSTANCE_ID --region ap-northeast-1
 
 # add instance name
+INSTANCE_ID=$(curl http://169.254.169.254/latest/meta-data/instance-id)
 aws ec2 create-tags --resources $INSTANCE_ID --tags Key=Name,Value=k3s --region ap-northeast-1
 
 # swap
@@ -127,15 +129,10 @@ done
 
 # mount
 
-file -s /dev/nvme1n1 | grep ext4
-if [[ "$?" != '0' ]]; then
-    mkfs -t ext4 /dev/nvme1n1
-fi
 mkdir -p /data/pvs
-mount /dev/nvme1n1 /data/pvs
+mount -t efs -o tls ${efs_file_system_id}:/ /data/pvs
 chown -R root:root /data/pvs
 chmod -R 755 /data/pvs
-echo '/dev/nvme1n1  /data/pvs ext4 defaults,nofail 0 2' >> /etc/fstab
 
 # apply application set
 

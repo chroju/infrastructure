@@ -104,6 +104,7 @@ resource "aws_launch_template" "k3s" {
     {
       k3s_version           = local.k3s_version,
       ebs_volume_id         = aws_ebs_volume.k3s_data.id,
+      efs_file_system_id    = aws_efs_file_system.k3s.id
       cloudflared_version   = local.cloudflared_version,
       cloudflare_account_id = var.cloudflare_account_id,
       cloudflare_tunnel = {
