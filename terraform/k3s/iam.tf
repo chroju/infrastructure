@@ -94,6 +94,19 @@ data "aws_iam_policy_document" "k3s_node_role" {
       "*"
     ]
   }
+
+  statement {
+    actions = [
+      "aps:RemoteWrite",
+      "aps:QueryMetrics",
+      "aps:GetSeries",
+      "aps:GetLabels",
+      "aps:GetMetricMetadata"
+    ]
+    resources = [
+      "*"
+    ]
+  }
 }
 
 data "aws_iam_policy" "ssm_managed_policy" {
