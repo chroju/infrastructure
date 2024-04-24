@@ -16,10 +16,10 @@ spec:
             repo: https://github.com/chroju/infrastructure
             path: kubernetes/cloudflared
             namespace: cloudflared
-          # - appname: prometheus
-          #   repo: https://github.com/chroju/infrastructure
-          #   path: kubernetes/prometheus
-          #   namespace: prometheus
+          - appname: prometheus
+            repo: https://github.com/chroju/infrastructure
+            path: kubernetes/prometheus
+            namespace: prometheus
           - appname: remo-exporter
             repo: https://github.com/chroju/infrastructure
             path: kubernetes/remo-exporter
