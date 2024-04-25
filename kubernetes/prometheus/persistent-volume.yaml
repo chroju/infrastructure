@@ -1,20 +1,20 @@
-kind: PersistentVolume
-apiVersion: v1
-metadata:
-  name: prometheus-pv
-  annotations:
-    argocd.argoproj.io/sync-wave: "-1"
-spec:
-  storageClassName: prometheus
-  capacity:
-    storage: 2Gi
-  accessModes:
-    - ReadWriteOnce
-  local:
-    path: /data/pvs/prometheus
-  nodeAffinity:
-    required:
-      nodeSelectorTerms:
-        - matchExpressions:
-            - key: kubernetes.io/hostname
-              operator: Exists
+# kind: PersistentVolume
+# apiVersion: v1
+# metadata:
+#   name: prometheus-pv
+#   annotations:
+#     argocd.argoproj.io/sync-wave: "-1"
+# spec:
+#   storageClassName: prometheus
+#   capacity:
+#     storage: 2Gi
+#   accessModes:
+#     - ReadWriteOnce
+#   local:
+#     path: /data/pvs/prometheus
+#   nodeAffinity:
+#     required:
+#       nodeSelectorTerms:
+#         - matchExpressions:
+#             - key: kubernetes.io/hostname
+#               operator: Exists
