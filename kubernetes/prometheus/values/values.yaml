@@ -3,10 +3,10 @@ alertmanager:
 prometheus-pushgateway:
   enabled: false
 server:
-  # persistentVolume:
-  #   enabled: true
-  #   storageClass: prometheus
-  #   size: 2Gi
+  persistentVolume:
+    enabled: true
+    storageClass: prometheus
+    size: 2Gi
   # extraSecretMounts:
   #   - name: password
   #     mountPath: /etc/secrets
