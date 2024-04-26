@@ -13,8 +13,11 @@ server:
   #     subPath: ""
   #     secretName: prometheus-secrets
   #     readOnly: true
-  remoteWrite:
-    - url: "https://prometheus-prod-18-prod-ap-southeast-0.grafana.net/api/prom/push"
+  # remoteWrite:
+  #   - url: "https://prometheus-prod-18-prod-ap-southeast-0.grafana.net/api/prom/push"
+  #     basic_auth:
+  #       username: 774278
+  #       password_file: /etc/secrets/grafanaCloudPassword
 extraScrapeConfigs: |
   - job_name: "remo"
     scrape_interval: 60s
