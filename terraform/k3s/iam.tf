@@ -22,7 +22,6 @@ data "aws_iam_policy_document" "k3s_node_role_assume_role_policy" {
 
 resource "aws_iam_role_policy_attachment" "k3s_node_role" {
   for_each = {
-    ebs = aws_iam_policy.k3s_node_role.arn,
     ssm = data.aws_iam_policy.ssm_managed_policy.arn
   }
 
@@ -36,27 +35,6 @@ resource "aws_iam_policy" "k3s_node_role" {
 }
 
 data "aws_iam_policy_document" "k3s_node_role" {
-  statement {
-    actions = [
-      "ec2:AttachVolume",
-      "ec2:DetachVolume",
-    ]
-    resources = [
-      "arn:aws:ec2:*:*:instance/*",
-      aws_ebs_volume.k3s_data.arn,
-    ]
-  }
-
-  statement {
-    actions = [
-      "ec2:DescribeVolumes",
-
-    ]
-    resources = [
-      aws_ebs_volume.k3s_data.arn,
-    ]
-  }
-
   statement {
     actions = [
       "kms:CreateGrant",

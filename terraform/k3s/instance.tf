@@ -106,7 +106,6 @@ resource "aws_launch_template" "k3s" {
   user_data = base64encode(templatefile("${path.module}/k3s_user_data_template.sh",
     {
       k3s_version           = local.k3s_version,
-      ebs_volume_id         = aws_ebs_volume.k3s_data.id,
       efs_file_system_id    = aws_efs_file_system.k3s.id
       cloudflared_version   = local.cloudflared_version,
       cloudflare_account_id = var.cloudflare_account_id,
@@ -140,18 +139,6 @@ resource "aws_autoscaling_group" "k3s" {
   launch_template {
     id      = aws_launch_template.k3s.id
     version = "$Latest"
-  }
-}
-
-resource "aws_ebs_volume" "k3s_data" {
-  availability_zone = "ap-northeast-1d"
-  size              = 10
-  encrypted         = true
-  kms_key_id        = aws_kms_key.k3s.arn
-  type              = "gp3"
-
-  tags = {
-    Name = "k3s_data"
   }
 }
 

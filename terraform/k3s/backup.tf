@@ -33,7 +33,6 @@ resource "aws_backup_selection" "k3s" {
   plan_id      = aws_backup_plan.daily_ec2_backup.id
 
   resources = [
-    aws_ebs_volume.k3s_data.arn,
     aws_efs_file_system.k3s.arn,
   ]
 }
