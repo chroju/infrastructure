@@ -69,15 +69,18 @@ data "aws_pricing_product" "ec2_instance" {
 }
 
 resource "aws_launch_template" "k3s" {
-  name          = "k3s"
-  image_id      = data.aws_ami.ubuntu_22_04_latest.id
-  key_name      = "chiang" # TODO
-  instance_type = local.k3s_instance_type
+  name                                 = "k3s"
+  image_id                             = data.aws_ami.ubuntu_22_04_latest.id
+  key_name                             = "chiang" # TODO
+  instance_type                        = local.k3s_instance_type
+  ebs_optimized                        = true
+  instance_initiated_shutdown_behavior = "terminate"
 
   network_interfaces {
     associate_public_ip_address = true
     subnet_id                   = data.aws_subnet.public.id
     security_groups             = [data.aws_security_group.external_only.id]
+    delete_on_termination       = "true"
   }
 
   iam_instance_profile {
@@ -136,7 +139,7 @@ resource "aws_autoscaling_group" "k3s" {
 
   launch_template {
     id      = aws_launch_template.k3s.id
-    version = aws_launch_template.k3s.latest_version
+    version = "$Latest"
   }
 }
 
