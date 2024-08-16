@@ -90,7 +90,7 @@ resource "aws_launch_template" "k3s" {
   block_device_mappings {
     device_name = "/dev/sda1"
     ebs {
-      volume_size           = 30
+      volume_size           = 20
       volume_type           = "gp3"
       delete_on_termination = true
     }
@@ -138,7 +138,11 @@ resource "aws_autoscaling_group" "k3s" {
 
   launch_template {
     id      = aws_launch_template.k3s.id
-    version = "$Latest"
+    version = aws_launch_template.k3s.latest_version
+  }
+
+  instance_refresh {
+    strategy = "Rolling"
   }
 }
 
