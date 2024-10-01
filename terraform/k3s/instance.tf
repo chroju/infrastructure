@@ -5,6 +5,13 @@ data "aws_subnet" "public" {
   }
 }
 
+data "aws_subnet" "public_c" {
+  filter {
+    name   = "tag:Name"
+    values = ["public-c"]
+  }
+}
+
 data "aws_ami" "ubuntu_22_04_latest" {
   most_recent = true
 
@@ -78,9 +85,9 @@ resource "aws_launch_template" "k3s" {
 
   network_interfaces {
     associate_public_ip_address = true
-    subnet_id                   = data.aws_subnet.public.id
-    security_groups             = [data.aws_security_group.external_only.id]
-    delete_on_termination       = "true"
+    # subnet_id                   = data.aws_subnet.public.id
+    security_groups       = [data.aws_security_group.external_only.id]
+    delete_on_termination = "true"
   }
 
   iam_instance_profile {
@@ -99,7 +106,7 @@ resource "aws_launch_template" "k3s" {
   instance_market_options {
     market_type = "spot"
     spot_options {
-      max_price = values(values(jsondecode(data.aws_pricing_product.ec2_instance.result).terms.OnDemand)[0].priceDimensions)[0].pricePerUnit.USD * 0.65
+      max_price = values(values(jsondecode(data.aws_pricing_product.ec2_instance.result).terms.OnDemand)[0].priceDimensions)[0].pricePerUnit.USD * 0.7
     }
   }
 
@@ -130,11 +137,11 @@ resource "aws_launch_template" "k3s" {
 }
 
 resource "aws_autoscaling_group" "k3s" {
-  name               = "k3s"
-  availability_zones = ["ap-northeast-1d"]
-  desired_capacity   = 1
-  max_size           = 1
-  min_size           = 1
+  name                = "k3s"
+  vpc_zone_identifier = [data.aws_subnet.public.id, data.aws_subnet.public_c.id]
+  desired_capacity    = 1
+  max_size            = 1
+  min_size            = 1
 
   launch_template {
     id      = aws_launch_template.k3s.id

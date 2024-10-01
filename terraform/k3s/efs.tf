@@ -14,6 +14,12 @@ resource "aws_efs_mount_target" "k3s" {
   security_groups = [aws_security_group.efs_k3s.id]
 }
 
+resource "aws_efs_mount_target" "k3s_c" {
+  file_system_id  = aws_efs_file_system.k3s.id
+  subnet_id       = data.aws_subnet.public_c.id
+  security_groups = [aws_security_group.efs_k3s.id]
+}
+
 data "aws_vpc" "dev" {
   id = "vpc-7f17bc1a"
 }
