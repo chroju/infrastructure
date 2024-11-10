@@ -11,3 +11,17 @@ spec:
   selector:
     app: grafana
   sessionAffinity: None
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: influxdb
+spec:
+  type: ClusterIP
+  ports:
+    - port: 80
+      protocol: TCP
+      targetPort: http-influxdb
+  selector:
+    app: grafana
+  sessionAffinity: None
