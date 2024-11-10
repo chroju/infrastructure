@@ -46,14 +46,43 @@ spec:
           resources:
             requests:
               cpu: 250m
-              memory: 750Mi
+              memory: 250Mi
             limits:
               cpu: 250m
-              memory: 750Mi
+              memory: 250Mi
           volumeMounts:
             - mountPath: /var/lib/grafana
               name: grafana-pv
+        - name: influxdb
+          image: influxdb:1.8.3
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8086
+              name: http-influxdb
+              protocol: TCP
+          resources:
+            requests:
+              cpu: 250m
+              memory: 250Mi
+            limits:
+              cpu: 250m
+              memory: 250Mi
+          volumeMounts:
+            - mountPath: /var/lib/influxdb
+              name: influxdb-pv
+            - mountPath: /etc/influxdb
+              readOnly: true
+              name: influxdb-conf
       volumes:
         - name: grafana-pv
           persistentVolumeClaim:
             claimName: grafana-pvc
+        - name: influxdb-pv
+          persistentVolumeClaim:
+            claimName: influxdb-pvc
+        - name: influxdb-conf
+          configMap:
+            name: influxdb-conf
+            items:
+              - key: influxdb.conf
+                path: influxdb.conf
