@@ -54,7 +54,7 @@ spec:
             - mountPath: /var/lib/grafana
               name: grafana-pv
         - name: influxdb
-          image: influxdb:1.8.3
+          image: influxdb:2.7.10
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8086
