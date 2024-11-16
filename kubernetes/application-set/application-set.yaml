@@ -12,27 +12,33 @@ spec:
             repo: https://github.com/chroju/infrastructure
             path: kubernetes/namespace
             namespace: kube-system # temp
+            targetRevision: HEAD
           - appname: cloudflared
             repo: https://github.com/chroju/infrastructure
             path: kubernetes/cloudflared
             namespace: cloudflared
+            targetRevision: HEAD
           - appname: external-secrets
             repo: https://github.com/chroju/infrastructure
             path: kubernetes/external-secrets
             hook: PreSync
             namespace: argo-cd
+            targetRevision: HEAD
           - appname: grafana
             repo: https://github.com/chroju/infrastructure
             path: kubernetes/grafana
             namespace: grafana
+            targetRevision: HEAD
           - appname: bitwarden
             repo: https://github.com/chroju/infrastructure
             path: kubernetes/bitwarden
             namespace: bitwarden
+            targetRevision: HEAD
           - appname: pleroma
             repo: https://github.com/chroju/infrastructure
             path: kubernetes/pleroma
             namespace: pleroma
+            targetRevision: update_pleroma
   template:
     metadata:
       name: "{{.appname}}"
@@ -43,7 +49,7 @@ spec:
       project: default
       source:
         repoURL: "{{.repo}}"
-        targetRevision: HEAD
+        targetRevision: "{{ .targetRevision }}"
         path: "{{.path}}"
       destination:
         server: https://kubernetes.default.svc
