@@ -1,15 +1,15 @@
 kind: PersistentVolume
 apiVersion: v1
 metadata:
-  name: grafana-pv
+  name: influxdb-pv
 spec:
-  storageClassName: grafana
+  storageClassName: influxdb
   capacity:
-    storage: 200Mi
+    storage: 400Mi
   accessModes:
     - ReadWriteOnce
   local:
-    path: /data/pvs/grafana
+    path: /data/pvs/influxdb
   nodeAffinity:
     required:
       nodeSelectorTerms:
@@ -20,15 +20,15 @@ spec:
 kind: PersistentVolume
 apiVersion: v1
 metadata:
-  name: influxdb-pv
+  name: influxdb-conf-pv
 spec:
-  storageClassName: influxdb
+  storageClassName: influxdb-conf
   capacity:
-    storage: 400Mi
+    storage: 5Mi
   accessModes:
     - ReadWriteOnce
   local:
-    path: /data/pvs/influxdb
+    path: /data/pvs/influxdb-conf
   nodeAffinity:
     required:
       nodeSelectorTerms:
