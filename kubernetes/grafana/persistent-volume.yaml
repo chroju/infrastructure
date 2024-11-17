@@ -35,3 +35,22 @@ spec:
         - matchExpressions:
             - key: kubernetes.io/hostname
               operator: Exists
+---
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  name: influxdb-conf-pv
+spec:
+  storageClassName: influxdb-conf
+  capacity:
+    storage: 5Mi
+  accessModes:
+    - ReadWriteOnce
+  local:
+    path: /data/pvs/influxdb-conf
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+        - matchExpressions:
+            - key: kubernetes.io/hostname
+              operator: Exists

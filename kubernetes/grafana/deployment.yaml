@@ -68,11 +68,10 @@ spec:
               cpu: 250m
               memory: 250Mi
           volumeMounts:
-            - mountPath: /var/lib/influxdb
+            - mountPath: /var/lib/influxdb2
               name: influxdb-pv
-            - mountPath: /etc/influxdb
-              readOnly: true
-              name: influxdb-conf
+            - mountPath: /etc/influxdb2
+              name: influxdb-conf-pv
       volumes:
         # - name: grafana-pv
         #   persistentVolumeClaim:
@@ -80,9 +79,6 @@ spec:
         - name: influxdb-pv
           persistentVolumeClaim:
             claimName: influxdb-pvc
-        - name: influxdb-conf
-          configMap:
-            name: influxdb-conf
-            items:
-              - key: influxdb.conf
-                path: influxdb.conf
+        - name: influxdb-conf-pv
+          persistentVolumeClaim:
+            claimName: influxdb-conf-pvc
