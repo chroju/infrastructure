@@ -21,6 +21,8 @@ spec:
         - image: ghcr.io/chroju/docker-pleroma:v2.7.0
           imagePullPolicy: Always
           name: pleroma
+          # command: ["/bin/sh"]
+          # args: ["-c", "while ! pg_isready -U ${DB_USER:-pleroma} -d postgres://${DB_HOST:-db}:${DB_PORT:-5432}/${DB_NAME:-pleroma} -t 1; do sleep 1s; done &&  $HOME/bin/pleroma_ctl database vacuum analyze && /pleroma/docker-entrypoint.sh"]
           # livenessProbe:
           #   httpGet:
           #     path: /ready
@@ -79,8 +81,8 @@ spec:
               cpu: 200m
               memory: 250Mi
             limits:
-              cpu: 300m
-              memory: 350Mi
+              cpu: 500m
+              memory: 500Mi
           env:
             - name: POSTGRES_DB
               value: pleroma
