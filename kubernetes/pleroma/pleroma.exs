@@ -34,9 +34,10 @@ config :pleroma, Pleroma.Repo,
   password: System.fetch_env!("DB_PASS"),
   database: System.get_env("DB_NAME", "pleroma"),
   hostname: System.get_env("DB_HOST", "db"),
-  pool_size: 10
-  queue_target: 5000
-  queue_interval: 15000
+  pool_size: 10,
+  queue_target: 5000,
+  queue_interval: 50000,
+  timeout: 100000
 
 config :pleroma, configurable_from_database: true
 
