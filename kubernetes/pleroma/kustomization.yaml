@@ -16,4 +16,7 @@ configMapGenerator:
 - name: pleroma-config
   files:
     - pleroma.exs
+- name: postgres-config
+  files:
+    - postgresql.conf
 
