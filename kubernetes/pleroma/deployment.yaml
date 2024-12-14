@@ -110,6 +110,6 @@ spec:
           configMap:
             name: pleroma-config
             items:
-            - key: config
+            - key: pleroma.exs
               path: config.exs
               mode: 0440
