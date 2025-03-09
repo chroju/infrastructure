@@ -1,0 +1,22 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: pleroma
+metadata:
+  name: pleroma
+
+resources:
+- deployment.yaml
+- external-secrets.yaml
+- persistent-volume-claim.yaml
+- persistent-volume.yaml
+- secrets-store.yaml
+- service.yaml
+
+configMapGenerator:
+- name: pleroma-config
+  files:
+    - pleroma.exs
+- name: postgres-config
+  files:
+    - postgresql.conf
+
