@@ -22,7 +22,7 @@ env:
 jobs:
   plan:
     if: github.event_name == 'pull_request'
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
     defaults:
       run:
         working-directory: ./terraform/kops/
@@ -61,7 +61,7 @@ jobs:
           PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
   apply:
     if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
     defaults:
       run:
         working-directory: ./terraform/kops/
