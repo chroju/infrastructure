@@ -1,0 +1,190 @@
+name: "Terraform Plan"
+
+on:
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'terraform/**'
+  issue_comment:
+    types: [created]
+
+permissions:
+  id-token: write
+  contents: read
+  pull-requests: write
+  statuses: write  # statusesの権限を追加
+
+jobs:
+  # PRのファイル変更を検出して対象ディレクトリを特定するジョブ
+  detect-terraform-dirs:
+    name: "Detect Terraform Directories"
+    runs-on: ubuntu-latest
+    if: |
+      (github.event_name == 'pull_request') || 
+      (github.event_name == 'issue_comment' && github.event.issue.pull_request && contains(github.event.comment.body, '/plan'))
+    outputs:
+      terraform_dirs: ${{ steps.set-dirs.outputs.terraform_dirs }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4.1.1
+        with:
+          fetch-depth: 0
+          
+      - name: Get PR number
+        id: get-pr-number
+        if: github.event_name == 'issue_comment'
+        run: |
+          echo "PR_NUMBER=${{ github.event.issue.number }}" >> $GITHUB_ENV
+          export PR_NUMBER=${{ github.event.issue.number }}
+          
+      - name: Get changed files
+        id: changed-files
+        run: |
+          if [ "${{ github.event_name }}" == "pull_request" ]; then
+            BASE_SHA=${{ github.event.pull_request.base.sha }}
+            HEAD_SHA=${{ github.event.pull_request.head.sha }}
+          else
+            PR_DATA=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+              "https://api.github.com/repos/${{ github.repository }}/pulls/${{ env.PR_NUMBER }}")
+            BASE_SHA=$(echo "$PR_DATA" | jq -r .base.sha)
+            HEAD_SHA=$(echo "$PR_DATA" | jq -r .head.sha)
+          fi
+          
+          git diff --name-only $BASE_SHA $HEAD_SHA | grep "^terraform/" > changed_files.txt
+          
+      - name: Set Terraform directories
+        id: set-dirs
+        run: |
+          DIRS=$(cat changed_files.txt | xargs -I{} dirname {} | sort -u | grep -v "^terraform$" | jq -R -s 'split("\n") | map(select(length > 0))' | jq -c .)
+          echo "terraform_dirs=$DIRS" >> $GITHUB_OUTPUT
+          echo "Detected Terraform directories: $DIRS"
+
+  # 検出したディレクトリごとにplanを実行
+  plan:
+    name: "Terraform Plan"
+    needs: detect-terraform-dirs
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        terraform_dir: ${{ fromJson(needs.detect-terraform-dirs.outputs.terraform_dirs) }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4.1.1
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3.0.0
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4.0.1
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ap-northeast-1
+
+      - name: Terraform Format
+        id: fmt
+        run: terraform fmt -check -recursive
+        continue-on-error: true
+
+      - name: Terraform Init
+        id: init
+        run: |
+          cd ${{ matrix.terraform_dir }}
+          terraform init
+
+      - name: Terraform Validate
+        id: validate
+        run: |
+          cd ${{ matrix.terraform_dir }}
+          terraform validate -no-color
+
+      - name: Terraform Plan
+        id: plan
+        run: |
+          cd ${{ matrix.terraform_dir }}
+          terraform plan -no-color -out=tfplan | tee plan_console_output.txt
+          PLAN_EXIT_CODE=$?
+          echo "exitcode=$PLAN_EXIT_CODE" >> $GITHUB_OUTPUT
+          terraform show -no-color tfplan > plan_output.txt
+          
+          # No Changesかどうかを確認
+          if grep -q "No changes" plan_console_output.txt; then
+            echo "has_changes=false" >> $GITHUB_OUTPUT
+          else
+            echo "has_changes=true" >> $GITHUB_OUTPUT
+          fi
+          
+          # ジョブ結果に出力を表示
+          echo "## Terraform Plan Result for ${{ matrix.terraform_dir }}" >> $GITHUB_STEP_SUMMARY
+          echo '```diff' >> $GITHUB_STEP_SUMMARY
+          cat plan_console_output.txt >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+        continue-on-error: true
+
+      - name: Update Pull Request
+        uses: actions/github-script@v7.0.1
+        env:
+          PLAN: "terraform\n${{ steps.plan.outputs.stdout }}"
+          TERRAFORM_DIR: ${{ matrix.terraform_dir }}
+          PLAN_EXIT_CODE: "${{ steps.plan.outputs.exitcode }}"
+          HAS_CHANGES: "${{ steps.plan.outputs.has_changes }}"
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const output = `#### Terraform Directory: \`${process.env.TERRAFORM_DIR}\`
+            #### Terraform Format and Style 🖌\`${{ steps.fmt.outcome }}\`
+            #### Terraform Initialization ⚙️\`${{ steps.init.outcome }}\`
+            #### Terraform Validation 🤖\`${{ steps.validate.outcome }}\`
+            #### Terraform Plan 📖\`${{ steps.plan.outcome }}\`
+            ${process.env.HAS_CHANGES === 'false' ? '#### No Changes Detected ✅' : '#### Changes Detected ⚠️'}
+
+            <details><summary>Show Plan</summary>
+
+            \`\`\`diff\n
+            ${process.env.PLAN}
+            \`\`\`
+
+            </details>
+
+            *Pushed by: @${{ github.actor }}, Action: \`${{ github.event_name }}\`*`;
+
+            const pr_number = context.eventName === 'pull_request' 
+              ? context.issue.number 
+              : context.payload.issue.number;
+              
+            github.rest.issues.createComment({
+              issue_number: pr_number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: output
+            })
+            
+            // Store plan status for apply job
+            if (context.eventName === 'pull_request') {
+              const sha = context.payload.pull_request.head.sha;
+              const planStatus = process.env.PLAN_EXIT_CODE === '0' ? 'success' : 'failure';
+              
+              await github.rest.repos.createCommitStatus({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                sha: sha,
+                state: planStatus,
+                context: `terraform/plan/${process.env.TERRAFORM_DIR}`,
+                description: `Terraform plan ${planStatus === 'success' ? 'succeeded' : 'failed'} for ${process.env.TERRAFORM_DIR}`
+              });
+              
+              // Apply用のステータスを設定
+              // No Changesの場合はsuccess、変更がある場合はfailure
+              const applyStatus = process.env.HAS_CHANGES === 'false' ? 'success' : 'failure';
+              const applyDescription = process.env.HAS_CHANGES === 'false' 
+                ? 'No changes detected - Apply would be a no-op' 
+                : 'Changes detected - Apply would make changes to infrastructure';
+              
+              await github.rest.repos.createCommitStatus({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                sha: sha,
+                state: applyStatus,
+                context: `terraform/apply/${process.env.TERRAFORM_DIR}`,
+                description: applyDescription
+              });
+            }

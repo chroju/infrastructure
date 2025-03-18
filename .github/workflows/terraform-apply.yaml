@@ -1,0 +1,188 @@
+name: "Terraform Apply"
+
+on:
+  issue_comment:
+    types: [created]
+
+permissions:
+  id-token: write
+  contents: read
+  pull-requests: write
+  statuses: write
+
+jobs:
+  # PRのファイル変更を検出して対象ディレクトリを特定するジョブ
+  detect-terraform-dirs:
+    name: "Detect Terraform Directories"
+    runs-on: ubuntu-latest
+    if: |
+      github.event.issue.pull_request && 
+      contains(github.event.comment.body, '/apply') && 
+      github.event.comment.user.login == 'chroju'
+    outputs:
+      terraform_dirs: ${{ steps.set-dirs.outputs.terraform_dirs }}
+    steps:
+      - name: Get PR number
+        run: echo "PR_NUMBER=${{ github.event.issue.number }}" >> $GITHUB_ENV
+          
+      - name: Get PR details
+        id: pr-details
+        run: |
+          PR_DATA=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            "https://api.github.com/repos/${{ github.repository }}/pulls/${{ github.event.issue.number }}")
+          HEAD_REF=$(echo "$PR_DATA" | jq -r .head.ref)
+          echo "HEAD_REF=$HEAD_REF" >> $GITHUB_OUTPUT
+          
+      - name: Checkout
+        uses: actions/checkout@v4.1.1
+        with:
+          fetch-depth: 0
+          ref: ${{ steps.pr-details.outputs.HEAD_REF }}
+          
+      - name: Get changed files
+        id: changed-files
+        run: |
+          PR_DATA=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            "https://api.github.com/repos/${{ github.repository }}/pulls/${{ github.event.issue.number }}")
+          BASE_SHA=$(echo "$PR_DATA" | jq -r .base.sha)
+          HEAD_SHA=$(echo "$PR_DATA" | jq -r .head.sha)
+          
+          git diff --name-only $BASE_SHA $HEAD_SHA | grep "^terraform/" > changed_files.txt
+          
+      - name: Set Terraform directories
+        id: set-dirs
+        run: |
+          DIRS=$(cat changed_files.txt | xargs -I{} dirname {} | sort -u | grep -v "^terraform$" | jq -R -s 'split("\n") | map(select(length > 0))' | jq -c .)
+          echo "terraform_dirs=$DIRS" >> $GITHUB_OUTPUT
+          echo "Detected Terraform directories: $DIRS"
+
+  # 検出したディレクトリごとにapplyを実行
+  apply:
+    name: "Terraform Apply"
+    needs: detect-terraform-dirs
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        terraform_dir: ${{ fromJson(needs.detect-terraform-dirs.outputs.terraform_dirs) }}
+    steps:
+      - name: Get PR details
+        id: pr-details
+        run: |
+          PR_DATA=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            "https://api.github.com/repos/${{ github.repository }}/pulls/${{ github.event.issue.number }}")
+          HEAD_REF=$(echo "$PR_DATA" | jq -r .head.ref)
+          HEAD_REPO=$(echo "$PR_DATA" | jq -r .head.repo.full_name)
+          HEAD_SHA=$(echo "$PR_DATA" | jq -r .head.sha)
+          echo "HEAD_REF=$HEAD_REF" >> $GITHUB_OUTPUT
+          echo "HEAD_SHA=$HEAD_SHA" >> $GITHUB_OUTPUT
+          
+      - name: Checkout
+        uses: actions/checkout@v4.1.1
+        with:
+          fetch-depth: 0
+          ref: ${{ steps.pr-details.outputs.HEAD_REF }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3.0.0
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4.0.1
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ap-northeast-1
+
+      - name: Terraform Init
+        id: init
+        run: |
+          cd ${{ matrix.terraform_dir }}
+          terraform init
+
+      - name: Check Plan Status
+        id: check-plan
+        run: |
+          PLAN_STATUS=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            "https://api.github.com/repos/${{ github.repository }}/commits/${{ steps.pr-details.outputs.HEAD_SHA }}/statuses" | \
+            jq -r '.[] | select(.context == "terraform/plan/${{ matrix.terraform_dir }}") | .state')
+          
+          if [ "$PLAN_STATUS" != "success" ]; then
+            echo "::error::Terraform plan for ${{ matrix.terraform_dir }} did not succeed. Cannot proceed with apply."
+            exit 1
+          fi
+          
+          echo "Plan status is success. Proceeding with apply."
+
+      - name: Terraform Apply
+        id: apply
+        run: |
+          cd ${{ matrix.terraform_dir }}
+          terraform apply -auto-approve -no-color | tee apply_output.txt
+          APPLY_EXIT_CODE=$?
+          echo "exitcode=$APPLY_EXIT_CODE" >> $GITHUB_OUTPUT
+          
+          # ジョブ結果に出力を表示
+          echo "## Terraform Apply Result for ${{ matrix.terraform_dir }}" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          cat apply_output.txt >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+        continue-on-error: true
+        
+      - name: Update Pull Request
+        uses: actions/github-script@v7.0.1
+        env:
+          APPLY: "terraform\n${{ steps.apply.outputs.stdout }}"
+          TERRAFORM_DIR: ${{ matrix.terraform_dir }}
+          APPLY_EXIT_CODE: "${{ steps.apply.outputs.exitcode }}"
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const output = `#### Terraform Directory: \`${process.env.TERRAFORM_DIR}\`
+            #### Terraform Apply ${process.env.APPLY_EXIT_CODE === '0' ? '✅ Completed' : '❌ Failed'}
+
+            <details><summary>Show Apply Output</summary>
+
+            \`\`\`\n
+            ${process.env.APPLY}
+            \`\`\`
+
+            </details>
+
+            *Applied by: @${{ github.actor }}*`;
+
+            github.rest.issues.createComment({
+              issue_number: context.payload.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: output
+            })
+            
+      - name: Update Status Check
+        uses: actions/github-script@v7.0.1
+        env:
+          APPLY_EXIT_CODE: "${{ steps.apply.outputs.exitcode }}"
+          TERRAFORM_DIR: "${{ matrix.terraform_dir }}"
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const { owner, repo } = context.repo;
+            const pr_number = context.payload.issue.number;
+            
+            const pr_data = await github.rest.pulls.get({
+              owner,
+              repo,
+              pull_number: pr_number
+            });
+            
+            const sha = pr_data.data.head.sha;
+            const applyStatus = process.env.APPLY_EXIT_CODE === '0' ? 'success' : 'failure';
+            const description = process.env.APPLY_EXIT_CODE === '0' 
+              ? 'Terraform apply completed successfully' 
+              : 'Terraform apply failed';
+            
+            github.rest.repos.createCommitStatus({
+              owner,
+              repo,
+              sha,
+              state: applyStatus,
+              context: `terraform/apply/${process.env.TERRAFORM_DIR}`,
+              description: description
+            });
