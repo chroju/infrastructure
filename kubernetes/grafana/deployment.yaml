@@ -19,7 +19,7 @@ spec:
           - 0
       containers:
         - name: influxdb
-          image: influxdb:2.7.10
+          image: influxdb:2.7.12
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8086
