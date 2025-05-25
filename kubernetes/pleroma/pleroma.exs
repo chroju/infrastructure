@@ -51,10 +51,6 @@ config :pleroma, Pleroma.Upload,
   uploader: Pleroma.Uploaders.S3,
   filters: [Pleroma.Upload.Filter.Dedupe,Pleroma.Upload.Filter.AnonymizeFilename,Pleroma.Upload.Filter.Mogrify]
 
-config :pleroma, :frontend_configurations,
-  pleroma_fe: %{
-    background: "bg.jpg"
-  }
 
 # We can't store the secrets in this file, since this is baked into the docker image
 if not File.exists?("/var/lib/pleroma/secret.exs") do
