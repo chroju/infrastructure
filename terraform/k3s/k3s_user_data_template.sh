@@ -1,11 +1,25 @@
 #!/bin/bash
 
 apt update
-apt install awscli git binutils rustc cargo pkg-config libssl-dev -y
-git clone https://github.com/aws/efs-utils /tmp/efs-utils
-cd /tmp/efs-utils
-./build-deb.sh
-apt-get install /tmp/efs-utils/build/amazon-efs-utils*deb -y
+apt install awscli git binutils rustc cargo pkg-config libssl-dev gettext python3-pip -y
+
+# Build and install amazon-efs-utils from source (Ubuntu 22.04 recommended method)
+cd /tmp
+git clone https://github.com/aws/efs-utils
+cd efs-utils
+if ./build-deb.sh; then
+    apt-get install -y ./build/amazon-efs-utils*.deb
+    echo "amazon-efs-utils installed successfully"
+    
+    # Install botocore for CloudWatch monitoring
+    pip3 install --target /usr/lib/python3/dist-packages botocore
+    
+    EFS_MOUNT_METHOD="efs-utils"
+else
+    echo "Failed to build amazon-efs-utils, falling back to NFS"
+    apt install -y nfs-common
+    EFS_MOUNT_METHOD="nfs"
+fi
 
 
 # add instance name
@@ -127,12 +141,63 @@ do
     sleep 10
 done
 
-# mount
+# mount EFS with retry logic and automatic mounting
 
 mkdir -p /data/pvs
-mount -t efs -o tls ${efs_file_system_id}:/ /data/pvs
-chown -R root:root /data/pvs
-chmod -R 755 /data/pvs
+
+# Configure mounting based on available method
+if [ "$EFS_MOUNT_METHOD" = "efs-utils" ]; then
+    echo "Using EFS mount helper"
+    # Add to /etc/fstab for automatic mounting on reboot
+    echo "${efs_file_system_id}.efs.ap-northeast-1.amazonaws.com:/ /data/pvs efs tls,_netdev 0 0" >> /etc/fstab
+    
+    # Mount with retry logic
+    for i in {1..5}; do
+        echo "Attempting EFS mount with efs-utils (attempt $i/5)..."
+        if mount -t efs -o tls ${efs_file_system_id}:/ /data/pvs; then
+            echo "EFS mount successful with efs-utils"
+            break
+        else
+            echo "EFS mount failed, retrying in 10 seconds..."
+            sleep 10
+            if [ $i -eq 5 ]; then
+                echo "Failed to mount EFS with efs-utils after 5 attempts"
+                # Log error details
+                echo "EFS mount failure at $(date)" >> /var/log/efs-mount-error.log
+                tail -20 /var/log/amazon/efs/mount.log >> /var/log/efs-mount-error.log 2>/dev/null || true
+            fi
+        fi
+    done
+else
+    echo "Using NFS mount"
+    # Add to /etc/fstab for automatic mounting on reboot (NFS method)
+    echo "${efs_file_system_id}.efs.ap-northeast-1.amazonaws.com:/ /data/pvs nfs4 nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2,_netdev 0 0" >> /etc/fstab
+    
+    # Mount with retry logic using NFS
+    for i in {1..5}; do
+        echo "Attempting EFS mount with NFS (attempt $i/5)..."
+        if mount -t nfs4 -o nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2 ${efs_file_system_id}.efs.ap-northeast-1.amazonaws.com:/ /data/pvs; then
+            echo "EFS mount successful with NFS"
+            break
+        else
+            echo "EFS mount failed, retrying in 10 seconds..."
+            sleep 10
+            if [ $i -eq 5 ]; then
+                echo "Failed to mount EFS with NFS after 5 attempts"
+                echo "EFS NFS mount failure at $(date)" >> /var/log/efs-mount-error.log
+            fi
+        fi
+    done
+fi
+
+# Set permissions only if mount successful
+if mountpoint -q /data/pvs; then
+    chown -R root:root /data/pvs
+    chmod -R 755 /data/pvs
+    echo "EFS mount and permissions set successfully"
+else
+    echo "EFS mount failed - skipping permission changes"
+fi
 
 # apply application set
 
