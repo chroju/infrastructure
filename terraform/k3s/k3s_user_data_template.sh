@@ -7,6 +7,11 @@ apt install awscli git binutils rustc cargo pkg-config libssl-dev gettext python
 cd /tmp
 git clone https://github.com/aws/efs-utils
 cd efs-utils
+
+# Apply workaround for Cargo lockfile issue (https://github.com/aws/efs-utils/issues/293)
+# Modify build-deb.sh to use the -Znext-lockfile-bump flag
+sed -i 's/cargo build --release/cargo build --release -Znext-lockfile-bump/' build-deb.sh
+
 if ./build-deb.sh; then
     apt-get install -y ./build/amazon-efs-utils*.deb
     echo "amazon-efs-utils installed successfully"
@@ -82,7 +87,7 @@ aws ssm put-parameter --region ap-northeast-1 --name /chroju/k3s/kube_config --t
 
 # Install cloudflared for kubectl (Kubernetes API)
 curl -Ls https://github.com/cloudflare/cloudflared/releases/download/${cloudflared_version}/cloudflared-linux-arm64.deb -o /tmp/cloudflared.deb
-dpkg -i ./tmp/cloudflared.deb
+dpkg -i /tmp/cloudflared.deb
 
 mkdir -p /root/.cloudflared
 cat > /root/.cloudflared/${cloudflare_tunnel.kubectl.id}.json <<EOF
