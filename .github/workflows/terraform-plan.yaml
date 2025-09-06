@@ -121,7 +121,7 @@ jobs:
         continue-on-error: true
 
       - name: Update Pull Request
-        uses: actions/github-script@v7.0.1
+        uses: actions/github-script@v7.1.0
         env:
           PLAN: "terraform\n${{ steps.plan.outputs.stdout }}"
           TERRAFORM_DIR: ${{ matrix.terraform_dir }}

@@ -127,7 +127,7 @@ jobs:
         continue-on-error: true
         
       - name: Update Pull Request
-        uses: actions/github-script@v7.0.1
+        uses: actions/github-script@v7.1.0
         env:
           APPLY: "terraform\n${{ steps.apply.outputs.stdout }}"
           TERRAFORM_DIR: ${{ matrix.terraform_dir }}
@@ -156,7 +156,7 @@ jobs:
             })
             
       - name: Update Status Check
-        uses: actions/github-script@v7.0.1
+        uses: actions/github-script@v7.1.0
         env:
           APPLY_EXIT_CODE: "${{ steps.apply.outputs.exitcode }}"
           TERRAFORM_DIR: "${{ matrix.terraform_dir }}"
