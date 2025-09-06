@@ -49,6 +49,27 @@ spec:
                 secretKeyRef:
                   name: bitwarden-secrets
                   key: bw-installation-key
+            - name: globalSettings__mail__smtp__host
+              value: smtp.gmail.com
+            - name: globalSettings__mail__smtp__port
+              value: '587'
+            - name: globalSettings__mail__smtp__ssl
+              value: 'false'
+            - name: globalSettings__mail__replyToEmail
+              valueFrom:
+                secretKeyRef:
+                  name: bitwarden-secrets
+                  key: bw-reply-to-email
+            - name: globalSettings__mail__smtp__username
+              valueFrom:
+                secretKeyRef:
+                  name: bitwarden-secrets
+                  key: bw-smtp-username
+            - name: globalSettings__mail__smtp__password
+              valueFrom:
+                secretKeyRef:
+                  name: bitwarden-secrets
+                  key: bw-smtp-password
           volumeMounts:
             - mountPath: /etc/bitwarden
               name: bitwarden-pv
