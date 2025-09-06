@@ -26,7 +26,7 @@ jobs:
       terraform_dirs: ${{ steps.set-dirs.outputs.terraform_dirs }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4.1.1
+        uses: actions/checkout@v4.3.0
         with:
           fetch-depth: 0
           
@@ -69,7 +69,7 @@ jobs:
         terraform_dir: ${{ fromJson(needs.detect-terraform-dirs.outputs.terraform_dirs) }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4.1.1
+        uses: actions/checkout@v4.3.0
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3.0.0
