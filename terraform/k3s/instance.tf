@@ -12,6 +12,44 @@ data "aws_subnet" "public_c" {
   }
 }
 
+data "aws_vpc" "main" {
+  filter {
+    name   = "vpc-id"
+    values = ["vpc-7f17bc1a"]
+  }
+}
+
+data "aws_route_table" "public" {
+  filter {
+    name   = "route-table-id"
+    values = ["rtb-05ac1660"]
+  }
+}
+
+resource "aws_subnet" "public_a" {
+  vpc_id                  = data.aws_vpc.main.id
+  cidr_block              = "10.0.4.0/24"
+  availability_zone       = "ap-northeast-1a"
+  map_public_ip_on_launch = true
+
+  tags = {
+    Name = "public-a"
+  }
+}
+
+resource "aws_route_table_association" "public_a" {
+  subnet_id      = aws_subnet.public_a.id
+  route_table_id = data.aws_route_table.public.id
+}
+
+data "aws_subnet" "public_a" {
+  depends_on = [aws_subnet.public_a]
+  filter {
+    name   = "tag:Name"
+    values = ["public-a"]
+  }
+}
+
 data "aws_ami" "ubuntu_22_04_latest" {
   most_recent = true
 
@@ -138,10 +176,11 @@ resource "aws_launch_template" "k3s" {
 
 resource "aws_autoscaling_group" "k3s" {
   name                = "k3s"
-  vpc_zone_identifier = [data.aws_subnet.public.id, data.aws_subnet.public_c.id]
+  vpc_zone_identifier = [data.aws_subnet.public.id, data.aws_subnet.public_c.id, data.aws_subnet.public_a.id]
   desired_capacity    = 1
   max_size            = 1
   min_size            = 1
+  capacity_rebalance  = true
 
   launch_template {
     id      = aws_launch_template.k3s.id
