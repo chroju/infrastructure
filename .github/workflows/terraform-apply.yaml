@@ -34,7 +34,7 @@ jobs:
           echo "HEAD_REF=$HEAD_REF" >> $GITHUB_OUTPUT
           
       - name: Checkout
-        uses: actions/checkout@v4.1.1
+        uses: actions/checkout@v4.3.0
         with:
           fetch-depth: 0
           ref: ${{ steps.pr-details.outputs.HEAD_REF }}
@@ -77,7 +77,7 @@ jobs:
           echo "HEAD_SHA=$HEAD_SHA" >> $GITHUB_OUTPUT
           
       - name: Checkout
-        uses: actions/checkout@v4.1.1
+        uses: actions/checkout@v4.3.0
         with:
           fetch-depth: 0
           ref: ${{ steps.pr-details.outputs.HEAD_REF }}
