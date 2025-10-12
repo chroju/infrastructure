@@ -55,7 +55,7 @@
       ],
       "datasourceTemplate": "github-releases",
       "depNameTemplate": "k3s-io/k3s",
-      "extractVersionTemplate": "^v(?<version>.+)$"
+      "versioning": "regex:^v(?<major>\\d+)\\.(?<minor>\\d+)\\.(?<patch>\\d+)(?<compatibility>\\+k3s)(?<build>\\d+)$"
     },
     {
       "fileMatch": ["terraform/k3s/locals.tf"],
