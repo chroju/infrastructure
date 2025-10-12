@@ -16,7 +16,7 @@ spec:
         pod: bitwarden
     spec:
       containers:
-        - image: ghcr.io/bitwarden/self-host:2025.8.2-beta
+        - image: ghcr.io/bitwarden/self-host:2025.9.2-beta
           name: bitwarden
           # livenessProbe:
           #   httpGet:
