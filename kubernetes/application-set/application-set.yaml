@@ -24,11 +24,11 @@ spec:
             hook: PreSync
             namespace: argo-cd
             targetRevision: HEAD
-          - appname: grafana
-            repo: https://github.com/chroju/infrastructure
-            path: kubernetes/grafana
-            namespace: grafana
-            targetRevision: HEAD
+          # - appname: grafana
+          #   repo: https://github.com/chroju/infrastructure
+          #   path: kubernetes/grafana
+          #   namespace: grafana
+          #   targetRevision: HEAD
           - appname: bitwarden
             repo: https://github.com/chroju/infrastructure
             path: kubernetes/bitwarden
