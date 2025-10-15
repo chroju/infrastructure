@@ -83,7 +83,7 @@ jobs:
           ref: ${{ steps.pr-details.outputs.HEAD_REF }}
 
       - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3.0.0
+        uses: hashicorp/setup-terraform@v3.1.2
 
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4.0.1
