@@ -132,7 +132,7 @@ spec:
           emptyDir: {}
         - name: nginx-config-volume
           configMap:
-            name: pleroma-config
+            name: nginx-config
             items:
             - key: nginx.conf
               path: nginx.conf
