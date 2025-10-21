@@ -38,7 +38,7 @@ spec:
             repo: https://github.com/chroju/infrastructure
             path: kubernetes/pleroma
             namespace: pleroma
-            targetRevision: add/nginx_pleroma
+            targetRevision: main
   template:
     metadata:
       name: "{{.appname}}"
