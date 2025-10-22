@@ -18,6 +18,24 @@ spec:
       securityContext:
         fsGroup: 911
       containers:
+        - image: public.ecr.aws/nginx/nginx-unprivileged:alpine
+          name: nginx
+          resources:
+            requests:
+              cpu: 50m
+              memory: 50Mi
+            limits:
+              cpu: 100m
+              memory: 100Mi
+          ports:
+            - containerPort: 4000
+          volumeMounts:
+            - mountPath: /etc/nginx/nginx.conf
+              subPath: nginx.conf
+              name: nginx-config-volume
+              readOnly: true
+            - mountPath: /tmp/pleroma-media-cache
+              name: nginx-cache
         - image: ghcr.io/chroju/docker-pleroma:v2.7.0
           imagePullPolicy: Always
           name: pleroma
@@ -41,7 +59,7 @@ spec:
               cpu: 100m
               memory: 200Mi
           ports:
-            - containerPort: 4000
+            - containerPort: 8080
           env:
             - name: DOMAIN
               value: pleroma.chroju.dev
@@ -66,7 +84,7 @@ spec:
             - mountPath: /var/lib/pleroma
               name: pleroma-pv
             - mountPath: /etc/pleroma/config.exs
-              subPath: config.exs
+              subPath: pleroma.exs
               name: pleroma-config-volume
             # - mountPath: /etc/pleroma
             #   name: pleroma-config-volume
@@ -110,12 +128,21 @@ spec:
         - name: pleroma-data-pv
           persistentVolumeClaim:
             claimName: pleroma-data-pvc
+        - name: nginx-cache
+          emptyDir: {}
+        - name: nginx-config-volume
+          configMap:
+            name: nginx-config
+            items:
+            - key: nginx.conf
+              path: nginx.conf
+              mode: 0444
         - name: pleroma-config-volume
           configMap:
             name: pleroma-config
             items:
             - key: pleroma.exs
-              path: config.exs
+              path: pleroma.exs
               mode: 0440
         - name: postgres-config-volume
           configMap:

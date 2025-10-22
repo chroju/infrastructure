@@ -13,6 +13,9 @@ resources:
 - service.yaml
 
 configMapGenerator:
+- name: nginx-config
+  files:
+    - nginx.conf
 - name: pleroma-config
   files:
     - pleroma.exs
