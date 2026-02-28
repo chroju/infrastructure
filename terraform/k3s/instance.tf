@@ -28,51 +28,8 @@ data "aws_ami" "ubuntu_22_04_latest" {
   owners = ["099720109477"] # Canonical
 }
 
-data "aws_ec2_spot_price" "for_k3s" {
-  instance_type     = local.k3s_instance_type
-  availability_zone = data.aws_subnet.public.availability_zone
-
-  filter {
-    name   = "product-description"
-    values = ["Linux/UNIX"]
-  }
-}
-
 data "aws_security_group" "external_only" {
   name = "external_only"
-}
-
-data "aws_pricing_product" "ec2_instance" {
-  provider     = aws.ap-south-1
-  service_code = "AmazonEC2"
-  filters {
-    field = "instanceType"
-    value = local.k3s_instance_type
-  }
-  filters {
-    field = "operatingSystem"
-    value = "Linux"
-  }
-  filters {
-    field = "preInstalledSw"
-    value = "NA"
-  }
-  filters {
-    field = "location"
-    value = "Asia Pacific (Tokyo)"
-  }
-  filters {
-    field = "licenseModel"
-    value = "No License required"
-  }
-  filters {
-    field = "tenancy"
-    value = "Shared"
-  }
-  filters {
-    field = "capacitystatus"
-    value = "Used"
-  }
 }
 
 resource "aws_launch_template" "k3s" {
@@ -100,13 +57,6 @@ resource "aws_launch_template" "k3s" {
       volume_size           = 20
       volume_type           = "gp3"
       delete_on_termination = true
-    }
-  }
-
-  instance_market_options {
-    market_type = "spot"
-    spot_options {
-      max_price = values(values(jsondecode(data.aws_pricing_product.ec2_instance.result).terms.OnDemand)[0].priceDimensions)[0].pricePerUnit.USD * 0.7
     }
   }
 
