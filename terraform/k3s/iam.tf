@@ -22,7 +22,7 @@ data "aws_iam_policy_document" "k3s_node_role_assume_role_policy" {
 
 resource "aws_iam_role_policy_attachment" "k3s_node_role" {
   for_each = {
-    ssm = data.aws_iam_policy.ssm_managed_policy.arn
+    ssm    = data.aws_iam_policy.ssm_managed_policy.arn
     custom = aws_iam_policy.k3s_node_role.arn
   }
 
