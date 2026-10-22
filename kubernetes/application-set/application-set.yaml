@@ -57,7 +57,15 @@ spec:
       syncPolicy:
         syncOptions:
           - CreateNamespace=true
+          # 新規クラスタでは External Secrets の CRD と webhook が揃う前に各アプリの同期が始まるため
+          - SkipDryRunOnMissingResource=true
         automated:
           prune: true
           selfHeal: false
           allowEmpty: false
+        retry:
+          limit: 10
+          backoff:
+            duration: 30s
+            factor: 2
+            maxDuration: 5m
