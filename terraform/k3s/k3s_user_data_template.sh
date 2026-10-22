@@ -123,8 +123,17 @@ metadata:
 spec:
   repo: https://argoproj.github.io/argo-helm
   chart: argo-cd
+  version: 10.10.5
   targetNamespace: argo-cd
   valuesContent: |-
+    # chart 10.10.5 の既定（Argo CD v3.5.5 / Dex v2.46.0）は Go 1.26.10 未満でビルドされており、
+    # eMudhra 中間 CA の失効（CVE-2026-111943）を含まないため、修正済みのイメージを指定する
+    global:
+      image:
+        tag: v3.5.6
+    dex:
+      image:
+        tag: v2.46.1
     server:
       extraArgs:
         - --insecure # HTTPSを無効化しないとArgo Tunnelから繋がらない
