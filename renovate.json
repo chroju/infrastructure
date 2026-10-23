@@ -23,6 +23,18 @@
     {
       "matchPackagePatterns": ["postgres"],
       "groupName": "postgres"
+    },
+    {
+      "description": "docker-pleroma は同じ版のタグを毎週作り直すため、ダイジェストで固定して更新を PR にする",
+      "matchPackageNames": ["ghcr.io/chroju/docker-pleroma"],
+      "pinDigests": true
+    },
+    {
+      "description": "docker-pleroma のパッチ版は自動でマージする。マイナー版以上とダイジェストの更新は人が確認する",
+      "matchPackageNames": ["ghcr.io/chroju/docker-pleroma"],
+      "matchUpdateTypes": ["patch"],
+      "automerge": true,
+      "automergeType": "branch"
     }
   ],
   "kubernetes": {
@@ -44,7 +56,7 @@
     {
       "fileMatch": ["kubernetes/.+\\.yaml$"],
       "matchStrings": [
-        "image:\\s+(?<depName>.*?):(?<currentValue>.*?)\\s"
+        "image:\\s+(?<depName>[^:\\s]+):(?<currentValue>[^@\\s]+)(?:@(?<currentDigest>sha256:[a-f0-9]+))?\\s"
       ],
       "datasourceTemplate": "docker"
     },
