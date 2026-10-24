@@ -7,6 +7,11 @@ metadata:
   namespace: pleroma
 spec:
   replicas: 1
+  # Postgres keeps its data directory on EFS; never run the old and new pods against it at the same time
+  strategy:
+    type: Recreate
+    # Clear the defaulted RollingUpdate parameters; the API rejects them with type Recreate
+    rollingUpdate: null
   selector:
     matchLabels:
       app: pleroma
