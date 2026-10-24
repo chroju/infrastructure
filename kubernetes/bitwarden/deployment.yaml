@@ -7,6 +7,9 @@ metadata:
   namespace: bitwarden
 spec:
   replicas: 1
+  # vault.db (SQLite) lives on EFS; never run the old and new pods against it at the same time
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
       pod: bitwarden
