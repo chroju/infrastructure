@@ -142,9 +142,24 @@ EOF
 kubectl create ns argo-cd
 kubectl apply -f /tmp/argo-cd-helm-chart.yaml
 
+# Register repository credentials (GitHub App) so that Argo CD can read this private repository
+
+get_parameter() {
+    aws ssm get-parameter --region ap-northeast-1 --name "$1" --with-decryption --query Parameter.Value --output text
+}
+kubectl create secret generic repo-infrastructure -n argo-cd \
+    --from-literal=type=git \
+    --from-literal=url=https://github.com/chroju/infrastructure \
+    --from-literal=githubAppID="$(get_parameter /chroju/k3s/argo_cd_github_app_id)" \
+    --from-literal=githubAppInstallationID="$(get_parameter /chroju/k3s/argo_cd_github_app_installation_id)" \
+    --from-literal=githubAppPrivateKey="$(get_parameter /chroju/k3s/argo_cd_github_app_private_key)"
+kubectl label secret repo-infrastructure -n argo-cd argocd.argoproj.io/secret-type=repository
+
 # Apply ApplicationSet
 
-curl https://raw.githubusercontent.com/chroju/infrastructure/main/kubernetes/bootstrap/app-of-application-set.yaml -o /tmp/application-set.yaml
+cat > /tmp/application-set.yaml <<'EOF'
+${bootstrap_application}
+EOF
 while true
 do
     # Argo CD ApplicationSet Controllerの起動を待つ

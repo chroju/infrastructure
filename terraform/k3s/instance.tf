@@ -66,6 +66,7 @@ resource "aws_launch_template" "k3s" {
       efs_file_system_id    = aws_efs_file_system.k3s.id
       cloudflared_version   = local.cloudflared_version,
       cloudflare_account_id = var.cloudflare_account_id,
+      bootstrap_application = file("${path.module}/../../kubernetes/bootstrap/app-of-application-set.yaml"),
       cloudflare_tunnel = {
         kubectl = {
           id       = cloudflare_argo_tunnel.k3s_zero_trust_tunnel.id,
