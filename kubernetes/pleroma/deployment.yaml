@@ -41,7 +41,7 @@ spec:
               readOnly: true
             - mountPath: /tmp/pleroma-media-cache
               name: nginx-cache
-        - image: ghcr.io/chroju/docker-pleroma:v2.10.2@sha256:23d9915b0482074e5da1244a980c91e83d6806a387259fb720ac308fb30667ff
+        - image: ghcr.io/chroju/docker-pleroma:v2.11.1@sha256:5a709e0f848f51532afbac2f7d646b5a1af92bed4f5ded0a212806aacc86302d
           imagePullPolicy: Always
           name: pleroma
           # command: ["/bin/sh"]
