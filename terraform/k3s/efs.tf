@@ -2,9 +2,9 @@ resource "aws_efs_file_system" "k3s" {
   creation_token = "k3s"
   encrypted      = true
   kms_key_id     = aws_kms_key.k3s.arn
-  # bursting ではクレジット枯渇時のベースラインが容量（約 1.7GB）に比例して極端に低くなり、
-  # Postgres の読み込みが詰まるため elastic にする
-  throughput_mode = "elastic"
+  # elastic は読み書き量に応じた従量課金で、Postgres の読み込みにより料金が高騰するため bursting にする
+  # クレジット枯渇時は Postgres の読み込みが詰まることがある
+  throughput_mode = "bursting"
 
   tags = {
     "Name" = "k3s"
