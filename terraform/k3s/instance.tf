@@ -12,12 +12,11 @@ data "aws_subnet" "public_c" {
   }
 }
 
-data "aws_ami" "ubuntu_22_04_latest" {
-  most_recent = true
-
+# The serial is pinned in locals.tf and updated by Renovate
+data "aws_ami" "ubuntu_22_04" {
   filter {
     name   = "name"
-    values = ["ubuntu/images/hvm-ssd/ubuntu-jammy-22.04-arm64-server-*"]
+    values = ["ubuntu/images/hvm-ssd/ubuntu-jammy-22.04-arm64-server-${local.ubuntu_ami_serial}"]
   }
 
   filter {
@@ -34,7 +33,7 @@ data "aws_security_group" "external_only" {
 
 resource "aws_launch_template" "k3s" {
   name                                 = "k3s"
-  image_id                             = data.aws_ami.ubuntu_22_04_latest.id
+  image_id                             = data.aws_ami.ubuntu_22_04.id
   key_name                             = "chiang" # TODO
   instance_type                        = local.k3s_instance_type
   ebs_optimized                        = true

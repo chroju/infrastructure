@@ -77,6 +77,23 @@
       "datasourceTemplate": "github-releases",
       "depNameTemplate": "cloudflare/cloudflared"
 
+    },
+    {
+      "fileMatch": ["terraform/k3s/locals.tf"],
+      "matchStrings": [
+        "ubuntu_ami_serial\\s+=\\s+\"(?<currentValue>[0-9]{8}(?:\\.[0-9]+)?)\""
+      ],
+      "datasourceTemplate": "custom.ubuntu-jammy-arm64-ami",
+      "depNameTemplate": "ubuntu-jammy-arm64-ami",
+      "versioningTemplate": "regex:^(?<major>\\d{4})(?<minor>\\d{2})(?<patch>\\d{2})(?:\\.(?<build>\\d+))?$"
     }
-  ]
+  ],
+  "customDatasources": {
+    "ubuntu-jammy-arm64-ami": {
+      "defaultRegistryUrlTemplate": "https://cloud-images.ubuntu.com/releases/streams/v1/com.ubuntu.cloud:released:aws.json",
+      "transformTemplates": [
+        "{\"releases\": [$keys(products.`com.ubuntu.cloud:server:22.04:arm64`.versions).{\"version\": $}]}"
+      ]
+    }
+  }
 }
